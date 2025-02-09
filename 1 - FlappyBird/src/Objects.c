@@ -1,5 +1,6 @@
 #include "Objects.h"
 #include "SDL3/SDL.h"
+#include "SDL3/SDL_events.h"
 #include <stdlib.h>
 
 #define GRAVITY (9.8 * 30)
@@ -19,7 +20,7 @@ void initBird(Bird **bird) {
 }
 
 void resetPipe(Pipe *pipe, const GameState *state) {
-  pipe->position.x = 640 + rand() % 100; // TODO: window size
+  pipe->position.x = state->windowSize.x + 50 + rand() % 150;
   pipe->position.y = 0;
   pipe->gap = 70 + rand() % 100;
   pipe->size.x = PIPE_WIDTH;
@@ -37,9 +38,10 @@ void initPipes(Pipe **pipes, const GameState *state) {
 
 void Game_Init(GameState **state) {
   GameState *g = SDL_malloc(sizeof(GameState));
+  g->windowSize.x = WINDOW_DEFAULT_WIDTH;
+  g->windowSize.y = WINDOW_DEFAULT_HEIGHT;
   g->lost = false;
-  g->groundY =
-      400; // TODO: position of ground must depend on the size of the window
+  g->groundY = WINDOW_DEFAULT_HEIGHT - 150;
   g->speedPipes = 100;
   g->gapPipes = 200;
   initBird(&g->bird);
@@ -54,7 +56,10 @@ void Game_Free(GameState *state) {
   SDL_free(state);
 }
 
-void pipeToRects(const Pipe *pipe, SDL_FRect *pipeAbove, SDL_FRect *pipeBelow) {
+void pipeToRects(const Pipe *pipe,
+                 SDL_FRect *pipeAbove,
+                 SDL_FRect *pipeBelow,
+                 const GameState *state) {
   pipeAbove->x = pipe->position.x;
   pipeAbove->y = 0;
   pipeAbove->w = pipe->size.x;
@@ -63,7 +68,7 @@ void pipeToRects(const Pipe *pipe, SDL_FRect *pipeAbove, SDL_FRect *pipeBelow) {
   pipeBelow->x = pipe->position.x;
   pipeBelow->y = pipe->size.y + pipe->gap;
   pipeBelow->w = pipe->size.x;
-  pipeBelow->h = 600; // TODO: height must depend on the size of the window
+  pipeBelow->h = state->windowSize.y - pipeBelow->y;
 }
 
 void renderFillRect(const SDL_FRect *rect,
@@ -73,11 +78,12 @@ void renderFillRect(const SDL_FRect *rect,
   SDL_RenderFillRect(renderer, rect);
 }
 
-void renderGround(float groundY,
+void renderGround(const GameState *state,
                   const SDL_Palette *palette,
                   SDL_Renderer *renderer) {
   SDL_Color col = palette->colors[GROUND];
-  SDL_FRect rect = {0, groundY, 800, 600}; // TODO: rectangle fills window
+  SDL_FRect rect = {
+      0, state->groundY, state->windowSize.x, state->windowSize.y};
   renderFillRect(&rect, &col, renderer);
 }
 
@@ -91,10 +97,11 @@ void renderBird(const Bird *bird,
 
 void renderPipe(const Pipe *pipe,
                 const SDL_Palette *palette,
-                SDL_Renderer *renderer) {
+                SDL_Renderer *renderer,
+                const GameState *state) {
   SDL_Color col = palette->colors[PIPE];
   SDL_FRect pipeAbove, pipeBelow;
-  pipeToRects(pipe, &pipeAbove, &pipeBelow);
+  pipeToRects(pipe, &pipeAbove, &pipeBelow, state);
 
   renderFillRect(&pipeAbove, &col, renderer);
   renderFillRect(&pipeBelow, &col, renderer);
@@ -103,10 +110,10 @@ void renderPipe(const Pipe *pipe,
 void Game_Render(const GameState *state,
                  const SDL_Palette *palette,
                  SDL_Renderer *renderer) {
-  renderGround(state->groundY, palette, renderer);
+  renderGround(state, palette, renderer);
   renderBird(state->bird, palette, renderer);
   for (int i = 0; i < NUMBER_PIPES; i++) {
-    renderPipe(&state->pipes[i], palette, renderer);
+    renderPipe(&state->pipes[i], palette, renderer, state);
   }
 }
 
@@ -117,10 +124,10 @@ bool hasOverlap(const SDL_FRect *rectangle1, const SDL_FRect *rectangle2) {
            rectangle2->y + rectangle2->h < rectangle1->y);
 }
 
-bool hasCollisionWithPipe(Bird *bird, Pipe *pipe) {
+bool hasCollisionWithPipe(Bird *bird, Pipe *pipe, const GameState *state) {
   SDL_FRect b = {BIRD_POSITION_X, bird->positionY, BIRD_SIZE, BIRD_SIZE};
   SDL_FRect pipeAbove, pipeBelow;
-  pipeToRects(pipe, &pipeAbove, &pipeBelow);
+  pipeToRects(pipe, &pipeAbove, &pipeBelow, state);
 
   return hasOverlap(&b, &pipeAbove) || hasOverlap(&b, &pipeBelow);
 }
@@ -134,7 +141,7 @@ bool birdHasCollision(Bird *bird, GameState *state) {
     return true;
   }
   for (int i = 0; i < NUMBER_PIPES; i++) {
-    if (hasCollisionWithPipe(bird, &state->pipes[i])) {
+    if (hasCollisionWithPipe(bird, &state->pipes[i], state)) {
       return true;
     }
   }
@@ -184,5 +191,8 @@ void Game_Event(GameState *state, const SDL_Event *event) {
         event->key.scancode == SDL_SCANCODE_W) {
       state->bird->velocityY = BIRD_FLAP_VELOCITY;
     }
+  } else if (event->type == SDL_EVENT_WINDOW_RESIZED) {
+    state->windowSize.x = event->window.data1;
+    state->windowSize.y = event->window.data2;
   }
 }

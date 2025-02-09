@@ -19,8 +19,6 @@
 #include "SDL3/SDL_video.h"
 #include <stdlib.h>
 #include <time.h>
-#include <stdlib.h>
-#include <time.h>
 #define SDL_MAIN_USE_CALLBACKS 1
 #include "Objects.h"
 #include "SDL3/SDL.h"
@@ -75,8 +73,10 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
   Game_Init(&state->gameState);
   *appstate = state;
 
-  state->window =
-      SDL_CreateWindow("Flappy Bird", 640, 480, SDL_WINDOW_OPENGL);
+  state->window = SDL_CreateWindow("Flappy Bird",
+                                   WINDOW_DEFAULT_WIDTH,
+                                   WINDOW_DEFAULT_HEIGHT,
+                                   SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
   if (state->window == nullptr) {
     SDL_LogCritical(
         SDL_LOG_CATEGORY_SYSTEM, "Couldn't create window: %s", SDL_GetError());

@@ -19,6 +19,9 @@
 
 #include "SDL3/SDL.h"
 
+#define WINDOW_DEFAULT_WIDTH 640
+#define WINDOW_DEFAULT_HEIGHT 480
+
 typedef enum {
   BACKGROUND = 0,
   BIRD,
@@ -45,6 +48,7 @@ typedef struct {
   bool lost;
   int groundY;
   float speedPipes, gapPipes;
+  Vector2f windowSize;
   Bird *bird;
   Pipe *pipes;
 } GameState;
