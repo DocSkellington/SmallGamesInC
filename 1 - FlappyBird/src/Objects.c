@@ -5,6 +5,8 @@
 #include "SDL3/SDL_scancode.h"
 
 #define GRAVITY (9.8 * 30)
+#define MAX_VELOCITY_BIRD 200
+#define BIRD_FLAP_VELOCITY -120
 
 void initGround(Object **ground) {
   Object *g = SDL_malloc(sizeof(Object));
@@ -76,6 +78,9 @@ bool update_bird(Object *bird, GameState *state, float delta) {
   }
 
   bird->velocityY += GRAVITY * delta;
+  if (bird->velocityY > MAX_VELOCITY_BIRD) {
+    bird->velocityY = MAX_VELOCITY_BIRD;
+  }
 
   return has_collision(bird, state->ground);
 }
@@ -95,7 +100,7 @@ void Game_Event(GameState *state, const SDL_Event *event) {
     if (event->key.scancode == SDL_SCANCODE_SPACE ||
         event->key.scancode == SDL_SCANCODE_UP ||
         event->key.scancode == SDL_SCANCODE_W) {
-      state->bird->velocityY = -120;
+      state->bird->velocityY = BIRD_FLAP_VELOCITY;
     }
   }
 }
