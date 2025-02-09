@@ -15,6 +15,8 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include "SDL3/SDL_events.h"
+#include "SDL3/SDL_scancode.h"
 #include "SDL3/SDL_stdinc.h"
 #include "SDL3/SDL_timer.h"
 #define SDL_MAIN_USE_CALLBACKS 1
@@ -156,6 +158,8 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
   if (event->type == SDL_EVENT_QUIT) {
     return SDL_APP_SUCCESS;
+  } else {
+    Game_Event(((AppState *)appstate)->gameState, event);
   }
   return SDL_APP_CONTINUE;
 }

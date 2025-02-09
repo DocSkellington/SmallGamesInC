@@ -35,6 +35,7 @@ typedef struct {
 typedef struct {
   Object *ground;
   Object *bird;
+  bool lost;
 } GameState;
 
 void Game_Init(GameState **state);
@@ -46,3 +47,5 @@ void Game_Render(const GameState *state,
                  SDL_Renderer *renderer);
 
 void Game_Update(GameState *state, float delta);
+
+void Game_Event(GameState *state, const SDL_Event *event);

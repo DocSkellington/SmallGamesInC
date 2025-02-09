@@ -1,5 +1,8 @@
 #include "Objects.h"
 #include "SDL3/SDL.h"
+#include "SDL3/SDL_events.h"
+#include "SDL3/SDL_log.h"
+#include "SDL3/SDL_scancode.h"
 
 #define GRAVITY (9.8 * 30)
 
@@ -31,6 +34,7 @@ void Game_Init(GameState **state) {
   GameState *g = SDL_malloc(sizeof(GameState));
   initGround(&g->ground);
   initBird(&g->bird);
+  g->lost = false;
 
   *state = g;
 }
@@ -57,23 +61,41 @@ void Game_Render(const GameState *state,
   render_object(state->bird, palette, renderer);
 }
 
-void update_bird(Object *bird, float delta) {
-  bird->rectangle.y += bird->velocityY * delta;
-
-  bird->velocityY += GRAVITY * delta;
+bool has_collision(Object *object1, Object *object2) {
+  return !(object1->rectangle.x + object1->rectangle.w < object2->rectangle.x ||
+           object2->rectangle.x + object2->rectangle.w < object1->rectangle.x ||
+           object1->rectangle.y + object1->rectangle.h < object2->rectangle.y ||
+           object2->rectangle.y + object2->rectangle.h < object2->rectangle.y);
 }
 
-void update_object(Object *object, float delta) {
-  switch (object->type) {
-  case BIRD:
-    update_bird(object, delta);
-  case BACKGROUND:
-  case PIPE:
-  case GROUND:
-    break;
+bool update_bird(Object *bird, GameState *state, float delta) {
+  bird->rectangle.y += bird->velocityY * delta;
+  if (bird->rectangle.y < 0) {
+    bird->rectangle.y = 0;
+    bird->velocityY = 0;
   }
+
+  bird->velocityY += GRAVITY * delta;
+
+  return has_collision(bird, state->ground);
 }
 
 void Game_Update(GameState *state, float delta) {
-  update_object(state->bird, delta);
+  if (state->lost) {
+    return;
+  }
+
+  if (update_bird(state->bird, state, delta)) {
+    state->lost = true;
+  }
+}
+
+void Game_Event(GameState *state, const SDL_Event *event) {
+  if (event->type == SDL_EVENT_KEY_UP) {
+    if (event->key.scancode == SDL_SCANCODE_SPACE ||
+        event->key.scancode == SDL_SCANCODE_UP ||
+        event->key.scancode == SDL_SCANCODE_W) {
+      state->bird->velocityY = -120;
+    }
+  }
 }
