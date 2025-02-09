@@ -7,3 +7,5 @@ project(SmallGames  VERSION 0.1
 add_subdirectory(vendored/SDL EXCLUDE_FROM_ALL)
 
 add_subdirectory("1 - FlappyBird")
+
+add_subdirectory(engine)

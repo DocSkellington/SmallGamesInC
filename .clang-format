@@ -9,3 +9,4 @@ BinPackParameters: false
 InsertBraces: true
 InsertNewlineAtEOF: true
 AllowShortEnumsOnASingleLine: false
+SeparateDefinitionBlocks: Always
