@@ -15,10 +15,12 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "SDL3/SDL_events.h"
-#include "SDL3/SDL_scancode.h"
-#include "SDL3/SDL_stdinc.h"
-#include "SDL3/SDL_timer.h"
+#include "SDL3/SDL_pixels.h"
+#include "SDL3/SDL_video.h"
+#include <stdlib.h>
+#include <time.h>
+#include <stdlib.h>
+#include <time.h>
 #define SDL_MAIN_USE_CALLBACKS 1
 #include "Objects.h"
 #include "SDL3/SDL.h"
@@ -40,29 +42,10 @@ void setTargetTick(AppState *state, Uint64 FPS) {
 }
 
 void initPalette(SDL_Palette **palette) {
-  SDL_Color background;
-  background.r = 170;
-  background.g = 85;
-  background.b = 30;
-  background.a = SDL_ALPHA_OPAQUE;
-
-  SDL_Color bird;
-  bird.r = 255;
-  bird.g = 240;
-  bird.b = 0;
-  bird.a = SDL_ALPHA_OPAQUE;
-
-  SDL_Color pipe;
-  pipe.r = 40;
-  pipe.g = 54;
-  pipe.b = 24;
-  pipe.a = SDL_ALPHA_OPAQUE;
-
-  SDL_Color ground;
-  ground.r = 96;
-  ground.g = 108;
-  ground.b = 56;
-  ground.a = SDL_ALPHA_OPAQUE;
+  SDL_Color background = {170, 85, 30, SDL_ALPHA_OPAQUE};
+  SDL_Color bird = {255, 240, 0, SDL_ALPHA_OPAQUE};
+  SDL_Color pipe = {40, 54, 24, SDL_ALPHA_OPAQUE};
+  SDL_Color ground = {96, 108, 56, SDL_ALPHA_OPAQUE};
 
   SDL_Color colors[4];
   colors[BACKGROUND] = background;
@@ -76,6 +59,8 @@ void initPalette(SDL_Palette **palette) {
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
   SDL_SetAppMetadata("Flappy Bird", "0.1", "com.gaetanstaquet.flappybird");
+
+  srand(time(NULL));
 
   if (!SDL_Init(SDL_INIT_VIDEO)) {
     SDL_LogCritical(
@@ -91,7 +76,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
   *appstate = state;
 
   state->window =
-      SDL_CreateWindow("Flappy Bird", 640, 480, SDL_WINDOW_RESIZABLE);
+      SDL_CreateWindow("Flappy Bird", 640, 480, SDL_WINDOW_OPENGL);
   if (state->window == nullptr) {
     SDL_LogCritical(
         SDL_LOG_CATEGORY_SYSTEM, "Couldn't create window: %s", SDL_GetError());

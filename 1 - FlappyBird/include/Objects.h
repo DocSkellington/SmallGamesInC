@@ -27,15 +27,26 @@ typedef enum {
 } ObjectType;
 
 typedef struct {
-  ObjectType type;
-  SDL_FRect rectangle;
-  float velocityX, velocityY;
-} Object;
+  float x, y;
+} Vector2f;
 
 typedef struct {
-  Object *ground;
-  Object *bird;
+  float positionY;
+  float velocityY;
+} Bird;
+
+typedef struct {
+  Vector2f position;
+  Vector2f size;
+  int gap;
+} Pipe;
+
+typedef struct {
   bool lost;
+  int groundY;
+  float speedPipes, gapPipes;
+  Bird *bird;
+  Pipe *pipes;
 } GameState;
 
 void Game_Init(GameState **state);
