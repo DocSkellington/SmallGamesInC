@@ -1,0 +1,11 @@
+---
+BasedOnStyle: LLVM
+IndentWidth: 2
+ColumnLimit: 80
+---
+Language: Cpp
+BinPackArguments: false
+BinPackParameters: false
+InsertBraces: true
+InsertNewlineAtEOF: true
+AllowShortEnumsOnASingleLine: false
