@@ -29,13 +29,20 @@ typedef enum {
 typedef struct {
   ObjectType type;
   SDL_FRect rectangle;
-  float speedX, speedY;
+  float velocityX, velocityY;
 } Object;
 
-void render_object(const Object *object,
-                   const SDL_Palette *palette,
-                   SDL_Renderer *renderer);
+typedef struct {
+  Object *ground;
+  Object *bird;
+} GameState;
 
-void update_object(Object *object, float deltaTime);
+void Game_Init(GameState **state);
 
-bool has_collision_with(const Object *source, const Object *target);
+void Game_Free(GameState *state);
+
+void Game_Render(const GameState *state,
+                 const SDL_Palette *palette,
+                 SDL_Renderer *renderer);
+
+void Game_Update(GameState *state, float delta);

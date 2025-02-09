@@ -16,6 +16,7 @@
 */
 
 #include "SDL3/SDL_stdinc.h"
+#include "SDL3/SDL_timer.h"
 #define SDL_MAIN_USE_CALLBACKS 1
 #include "Objects.h"
 #include "SDL3/SDL.h"
@@ -29,15 +30,14 @@ typedef struct {
   Uint64 lastFrameEndNS;
   double targetTickTimeNS;
 
-  Object *ground;
-  Object *bird;
+  GameState *gameState;
 } AppState;
 
-void setTargetTick(AppState* state, Uint64 FPS) {
+void setTargetTick(AppState *state, Uint64 FPS) {
   state->targetTickTimeNS = SDL_NS_PER_SECOND * 1. / FPS;
 }
 
-void init_palette(SDL_Palette **palette) {
+void initPalette(SDL_Palette **palette) {
   SDL_Color background;
   background.r = 170;
   background.g = 85;
@@ -72,30 +72,6 @@ void init_palette(SDL_Palette **palette) {
   SDL_SetPaletteColors(*palette, colors, 0, 4);
 }
 
-void init_ground(Object **ground) {
-  Object *g = SDL_malloc(sizeof(Object));
-  g->type = GROUND;
-  g->rectangle.x = 0;
-  g->rectangle.y = 400;
-  g->rectangle.w = 640;
-  g->rectangle.h = 100;
-  g->speedX = 0;
-  g->speedY = 0;
-  *ground = g;
-}
-
-void init_bird(Object **bird) {
-  Object *b = SDL_malloc(sizeof(Object));
-  b->type = BIRD;
-  b->rectangle.x = 50;
-  b->rectangle.y = 200;
-  b->rectangle.w = 20;
-  b->rectangle.h = 20;
-  b->speedX = 0;
-  b->speedY = 0;
-  *bird = b;
-}
-
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
   SDL_SetAppMetadata("Flappy Bird", "0.1", "com.gaetanstaquet.flappybird");
 
@@ -108,9 +84,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
   AppState *state = SDL_malloc(sizeof(AppState));
   state->lastFrameEndNS = 0;
   setTargetTick(state, 60);
-  init_palette(&state->palette);
-  init_ground(&state->ground);
-  init_bird(&state->bird);
+  initPalette(&state->palette);
+  Game_Init(&state->gameState);
   *appstate = state;
 
   state->window =
@@ -132,7 +107,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
   return SDL_APP_CONTINUE;
 }
 
-void draw_app(AppState *state) {
+void drawApp(AppState *state) {
   SDL_Color backgroundColor = state->palette->colors[BACKGROUND];
 
   SDL_SetRenderDrawColor(state->renderer,
@@ -143,14 +118,14 @@ void draw_app(AppState *state) {
 
   SDL_RenderClear(state->renderer);
 
-  render_object(state->ground, state->palette, state->renderer);
-  render_object(state->bird, state->palette, state->renderer);
+  Game_Render(state->gameState, state->palette, state->renderer);
 
   SDL_RenderPresent(state->renderer);
 }
 
-void physics_step(AppState *state, Uint64 deltaNS) {
-
+void physicsStep(AppState *state, Uint64 deltaNS) {
+  const float delta = deltaNS * 1. / SDL_NS_PER_SECOND;
+  Game_Update(state->gameState, delta);
 }
 
 SDL_AppResult SDL_AppIterate(void *appstate) {
@@ -160,8 +135,8 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   auto deltaNS = startFrame - state->lastFrameEndNS;
 
   if (deltaNS >= state->targetTickTimeNS) {
-    physics_step(state, deltaNS);
-    draw_app(state);
+    physicsStep(state, deltaNS);
+    drawApp(state);
 
     auto endFrame = SDL_GetTicksNS();
     auto frameTime = endFrame - startFrame;
@@ -172,7 +147,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     SDL_Log("Time since previous frame: %lu ns", elapsedSinceLast);
     SDL_Log("Current FPS: %f", fps);
 
-    state ->lastFrameEndNS = endFrame;
+    state->lastFrameEndNS = endFrame;
   }
 
   return SDL_APP_CONTINUE;
@@ -188,7 +163,6 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 void SDL_AppQuit(void *appstate, SDL_AppResult result) {
   AppState *state = appstate;
   SDL_DestroyPalette(state->palette);
-  SDL_free(state->ground);
-  SDL_free(state->bird);
+  Game_Free(state->gameState);
   SDL_free(state);
 }
