@@ -1,6 +1,5 @@
 #include "Objects.h"
 #include "SDL3/SDL.h"
-#include "SDL3/SDL_events.h"
 #include <stdlib.h>
 
 #define GRAVITY (9.8 * 30)
@@ -9,7 +8,7 @@
 #define BIRD_POSITION_X 50
 #define BIRD_SIZE 20
 
-#define NUMBER_PIPES 3
+#define NUMBER_PIPES 5
 #define PIPE_WIDTH 50
 
 void initBird(Bird **bird) {
@@ -20,34 +19,45 @@ void initBird(Bird **bird) {
 }
 
 void resetPipe(Pipe *pipe, const GameState *state) {
-  pipe->position.x = state->windowSize.x + 50 + rand() % 150;
+  float startX = state->windowSize.x;
+  for (int i = 0; i < NUMBER_PIPES; i++) {
+    if (state->pipes[i].position.x > startX) {
+      startX = state->pipes[i].position.x;
+    }
+  }
+  pipe->position.x = startX + state->gapPipes + rand() % 200;
   pipe->position.y = 0;
   pipe->gap = 70 + rand() % 100;
   pipe->size.x = PIPE_WIDTH;
   pipe->size.y = 10 + rand() % (state->groundY - pipe->gap - 10);
+  pipe->scored = false;
 }
 
 void initPipes(Pipe **pipes, const GameState *state) {
-  Pipe *p = SDL_malloc(sizeof(Pipe) * NUMBER_PIPES);
+  Pipe *p = SDL_calloc(NUMBER_PIPES, sizeof(Pipe));
+  *pipes = p;
+  for (int i = 0; i < NUMBER_PIPES; i++) {
+    p[i].position.x = state->windowSize.x;
+    p[i].position.y = 0;
+  }
   for (int i = 0; i < NUMBER_PIPES; i++) {
     resetPipe(&p[i], state);
     p[i].position.x = 500 + i * (PIPE_WIDTH + state->gapPipes);
   }
-  *pipes = p;
 }
 
 void Game_Init(GameState **state) {
   GameState *g = SDL_malloc(sizeof(GameState));
+  *state = g;
   g->windowSize.x = WINDOW_DEFAULT_WIDTH;
   g->windowSize.y = WINDOW_DEFAULT_HEIGHT;
   g->lost = false;
   g->groundY = WINDOW_DEFAULT_HEIGHT - 150;
   g->speedPipes = 100;
   g->gapPipes = 200;
+  g->score = 0;
   initBird(&g->bird);
   initPipes(&g->pipes, g);
-
-  *state = g;
 }
 
 void Game_Free(GameState *state) {
@@ -115,6 +125,9 @@ void Game_Render(const GameState *state,
   for (int i = 0; i < NUMBER_PIPES; i++) {
     renderPipe(&state->pipes[i], palette, renderer, state);
   }
+
+  SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+  SDL_RenderDebugTextFormat(renderer, 50, 50, "Score: %d", state->score);
 }
 
 bool hasOverlap(const SDL_FRect *rectangle1, const SDL_FRect *rectangle2) {
@@ -148,7 +161,8 @@ bool birdHasCollision(Bird *bird, GameState *state) {
   return false;
 }
 
-bool updateBird(Bird *bird, GameState *state, float delta) {
+bool updateBird(GameState *state, float delta) {
+  Bird *bird = state->bird;
   bird->positionY += bird->velocityY * delta;
   if (bird->positionY < 0) {
     bird->positionY = 0;
@@ -166,6 +180,11 @@ bool updateBird(Bird *bird, GameState *state, float delta) {
 void updatePipe(Pipe *pipe, GameState *state, float delta) {
   pipe->position.x -= state->speedPipes * delta;
 
+  if (pipe->position.x + pipe->size.x < BIRD_POSITION_X && !pipe->scored) {
+    pipe->scored = true;
+    state->score++;
+  }
+
   if (pipe->position.x + pipe->size.x < 0) {
     resetPipe(pipe, state);
   }
@@ -176,7 +195,7 @@ void Game_Update(GameState *state, float delta) {
     return;
   }
 
-  if (updateBird(state->bird, state, delta)) {
+  if (updateBird(state, delta)) {
     state->lost = true;
   }
   for (int i = 0; i < NUMBER_PIPES; i++) {

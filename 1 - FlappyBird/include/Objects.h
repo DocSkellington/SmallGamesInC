@@ -42,6 +42,7 @@ typedef struct {
   Vector2f position;
   Vector2f size;
   int gap;
+  bool scored;
 } Pipe;
 
 typedef struct {
@@ -51,6 +52,7 @@ typedef struct {
   Vector2f windowSize;
   Bird *bird;
   Pipe *pipes;
+  int score;
 } GameState;
 
 void Game_Init(GameState **state);
