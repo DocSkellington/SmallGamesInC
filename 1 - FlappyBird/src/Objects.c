@@ -12,11 +12,14 @@
 #define NUMBER_PIPES 5
 #define PIPE_WIDTH 50
 
+void resetBird(Bird *bird) {
+  bird->positionY = 200;
+  bird->velocityY = BIRD_FLAP_VELOCITY;
+}
+
 void initBird(Bird **bird) {
-  Bird *b = SDL_malloc(sizeof(Bird));
-  b->positionY = 200;
-  b->velocityY = BIRD_FLAP_VELOCITY;
-  *bird = b;
+  *bird = SDL_malloc(sizeof(Bird));
+  resetBird(*bird);
 }
 
 void resetPipe(Pipe *pipe, const GameState *state) {
@@ -40,10 +43,6 @@ void initPipes(Pipe **pipes, const GameState *state) {
   for (int i = 0; i < NUMBER_PIPES; i++) {
     p[i].position.x = state->windowSize.x;
     p[i].position.y = 0;
-  }
-  for (int i = 0; i < NUMBER_PIPES; i++) {
-    resetPipe(&p[i], state);
-    p[i].position.x = 500 + i * (PIPE_WIDTH + state->gapPipes);
   }
 }
 
@@ -211,12 +210,24 @@ void Game_Update(GameState *state, float delta) {
     return;
   }
 
-  if (updateBird(state, delta)) {
-    state->lost = true;
-    state->running = false;
-  }
+  int oldScore = state->score;
+
+  bool end = updateBird(state, delta);
   for (int i = 0; i < NUMBER_PIPES; i++) {
     updatePipe(&state->pipes[i], state, delta);
+  }
+
+  if (state->score % 5 == 0 && oldScore != state->score) {
+    state->speedPipes += 5;
+    state->gapPipes -= 20;
+    if (state->gapPipes < 50) {
+      state->gapPipes = 50;
+    }
+  }
+
+  if (end) {
+    state->lost = true;
+    state->running = false;
   }
 }
 
@@ -228,7 +239,14 @@ void Game_Event(GameState *state, const SDL_Event *event) {
       if (state->running) {
         state->bird->velocityY = BIRD_FLAP_VELOCITY;
       } else {
+        resetBird(state->bird);
         resetGame(state);
+        for (int i = 0; i < NUMBER_PIPES; i++) {
+          state->pipes[i].position.x = state->windowSize.x;
+        }
+        for (int i = 0; i < NUMBER_PIPES; i++) {
+          resetPipe(&state->pipes[i], state);
+        }
         state->running = true;
       }
     }
