@@ -1,6 +1,8 @@
-add_executable(FlappyBird main.c)
+add_executable(FlappyBird src/main.c)
 
-target_compile_features(FlappyBird PUBLIC c_std_23)
+target_sources(FlappyBird PRIVATE src/Objects.c)
+
+set_property(TARGET FlappyBird PROPERTY C_STANDARD 23)
 
 target_include_directories(FlappyBird PRIVATE include)
 target_link_libraries(FlappyBird PRIVATE SDL3::SDL3)
