@@ -1,5 +1,6 @@
 #include "Objects.h"
 #include "SDL3/SDL.h"
+#include "SDL3/SDL_render.h"
 #include <stdlib.h>
 
 #define GRAVITY (9.8 * 30)
@@ -14,7 +15,7 @@
 void initBird(Bird **bird) {
   Bird *b = SDL_malloc(sizeof(Bird));
   b->positionY = 200;
-  b->velocityY = 5;
+  b->velocityY = BIRD_FLAP_VELOCITY;
   *bird = b;
 }
 
@@ -46,16 +47,21 @@ void initPipes(Pipe **pipes, const GameState *state) {
   }
 }
 
+void resetGame(GameState *state) {
+  state->running = false;
+  state->lost = false;
+  state->speedPipes = 100;
+  state->gapPipes = 200;
+  state->score = 0;
+}
+
 void Game_Init(GameState **state) {
   GameState *g = SDL_malloc(sizeof(GameState));
   *state = g;
   g->windowSize.x = WINDOW_DEFAULT_WIDTH;
   g->windowSize.y = WINDOW_DEFAULT_HEIGHT;
-  g->lost = false;
   g->groundY = WINDOW_DEFAULT_HEIGHT - 150;
-  g->speedPipes = 100;
-  g->gapPipes = 200;
-  g->score = 0;
+  resetGame(g);
   initBird(&g->bird);
   initPipes(&g->pipes, g);
 }
@@ -127,7 +133,17 @@ void Game_Render(const GameState *state,
   }
 
   SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-  SDL_RenderDebugTextFormat(renderer, 50, 50, "Score: %d", state->score);
+  SDL_RenderDebugTextFormat(renderer, 10, 10, "Score: %d", state->score);
+
+  if (state->lost) {
+    SDL_RenderDebugText(renderer, 100, 100, "GAME OVER");
+  }
+  if (!state->running) {
+    SDL_RenderDebugText(renderer,
+                        state->windowSize.x / 2,
+                        state->windowSize.y / 2,
+                        "Press space, up, Z, or W.");
+  }
 }
 
 bool hasOverlap(const SDL_FRect *rectangle1, const SDL_FRect *rectangle2) {
@@ -191,12 +207,13 @@ void updatePipe(Pipe *pipe, GameState *state, float delta) {
 }
 
 void Game_Update(GameState *state, float delta) {
-  if (state->lost) {
+  if (state->lost || !state->running) {
     return;
   }
 
   if (updateBird(state, delta)) {
     state->lost = true;
+    state->running = false;
   }
   for (int i = 0; i < NUMBER_PIPES; i++) {
     updatePipe(&state->pipes[i], state, delta);
@@ -208,7 +225,12 @@ void Game_Event(GameState *state, const SDL_Event *event) {
     if (event->key.scancode == SDL_SCANCODE_SPACE ||
         event->key.scancode == SDL_SCANCODE_UP ||
         event->key.scancode == SDL_SCANCODE_W) {
-      state->bird->velocityY = BIRD_FLAP_VELOCITY;
+      if (state->running) {
+        state->bird->velocityY = BIRD_FLAP_VELOCITY;
+      } else {
+        resetGame(state);
+        state->running = true;
+      }
     }
   } else if (event->type == SDL_EVENT_WINDOW_RESIZED) {
     state->windowSize.x = event->window.data1;

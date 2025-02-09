@@ -46,7 +46,7 @@ typedef struct {
 } Pipe;
 
 typedef struct {
-  bool lost;
+  bool running, lost;
   int groundY;
   float speedPipes, gapPipes;
   Vector2f windowSize;

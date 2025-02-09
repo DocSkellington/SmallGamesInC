@@ -15,8 +15,6 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "SDL3/SDL_pixels.h"
-#include "SDL3/SDL_video.h"
 #include <stdlib.h>
 #include <time.h>
 #define SDL_MAIN_USE_CALLBACKS 1
@@ -130,9 +128,8 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     auto elapsedSinceLast = endFrame - state->lastFrameEndNS;
     double fps = (SDL_NS_PER_SECOND * 1. / elapsedSinceLast);
 
-    SDL_Log("Frame time: %lu ns", frameTime);
-    SDL_Log("Time since previous frame: %lu ns", elapsedSinceLast);
-    SDL_Log("Current FPS: %f", fps);
+    SDL_Log("Frame time: %f ms", frameTime * 1. / SDL_NS_PER_MS);
+    SDL_Log("Current FPS: %2.2f", fps);
 
     state->lastFrameEndNS = endFrame;
   }
