@@ -15,8 +15,7 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "SDL3/SDL_error.h"
-#include "SDL3/SDL_log.h"
+#include "SDL3/SDL_stdinc.h"
 #define SDL_MAIN_USE_CALLBACKS 1
 #include "Objects.h"
 #include "SDL3/SDL.h"
@@ -27,9 +26,16 @@ typedef struct {
   SDL_Renderer *renderer;
   SDL_Palette *palette;
 
+  Uint64 lastFrameEndNS;
+  double targetTickTimeNS;
+
   Object *ground;
   Object *bird;
 } AppState;
+
+void setTargetTick(AppState* state, Uint64 FPS) {
+  state->targetTickTimeNS = SDL_NS_PER_SECOND * 1. / FPS;
+}
 
 void init_palette(SDL_Palette **palette) {
   SDL_Color background;
@@ -100,6 +106,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
   }
 
   AppState *state = SDL_malloc(sizeof(AppState));
+  state->lastFrameEndNS = 0;
+  setTargetTick(state, 60);
   init_palette(&state->palette);
   init_ground(&state->ground);
   init_bird(&state->bird);
@@ -124,19 +132,14 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
   return SDL_APP_CONTINUE;
 }
 
-SDL_AppResult SDL_AppIterate(void *appstate) {
-  AppState *state = appstate;
-
+void draw_app(AppState *state) {
   SDL_Color backgroundColor = state->palette->colors[BACKGROUND];
 
-  if (!SDL_SetRenderDrawColor(state->renderer,
-                              backgroundColor.r,
-                              backgroundColor.g,
-                              backgroundColor.b,
-                              backgroundColor.a)) {
-    SDL_LogError(
-        SDL_LOG_CATEGORY_RENDER, "Couldn't render color: %s", SDL_GetError());
-  }
+  SDL_SetRenderDrawColor(state->renderer,
+                         backgroundColor.r,
+                         backgroundColor.g,
+                         backgroundColor.b,
+                         backgroundColor.a);
 
   SDL_RenderClear(state->renderer);
 
@@ -144,6 +147,33 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   render_object(state->bird, state->palette, state->renderer);
 
   SDL_RenderPresent(state->renderer);
+}
+
+void physics_step(AppState *state, Uint64 deltaNS) {
+
+}
+
+SDL_AppResult SDL_AppIterate(void *appstate) {
+  AppState *state = appstate;
+
+  auto startFrame = SDL_GetTicksNS();
+  auto deltaNS = startFrame - state->lastFrameEndNS;
+
+  if (deltaNS >= state->targetTickTimeNS) {
+    physics_step(state, deltaNS);
+    draw_app(state);
+
+    auto endFrame = SDL_GetTicksNS();
+    auto frameTime = endFrame - startFrame;
+    auto elapsedSinceLast = endFrame - state->lastFrameEndNS;
+    double fps = (SDL_NS_PER_SECOND * 1. / elapsedSinceLast);
+
+    SDL_Log("Frame time: %lu ns", frameTime);
+    SDL_Log("Time since previous frame: %lu ns", elapsedSinceLast);
+    SDL_Log("Current FPS: %f", fps);
+
+    state ->lastFrameEndNS = endFrame;
+  }
 
   return SDL_APP_CONTINUE;
 }
