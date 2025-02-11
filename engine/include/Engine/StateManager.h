@@ -21,34 +21,72 @@
 #define STATEMANAGER_OK 0
 #define STATEMANAGER_FULL 1
 #define STATEMANAGER_EMPTY 2
+#define STATEMANAGER_STATE_NULL 3
 
-typedef struct {
-  void *memory;
-  void (*init)(void **memory);
-  void (*destroy)(void *memory);
-  bool (*update)(void *memory, float delta);
-  bool (*render)(const void *memory, SDL_Renderer *renderer);
-  bool (*processEvent)(void *memory, const SDL_Event *event);
-} State;
+/**
+ * Manages the states of the game.
+ *
+ * It is expected that there are no duplicated states inside the manager.
+ * If a state appears multiple times, a double free error WILL occur.
+ *
+ * \since This struct is available since Engine 1.0.0.
+ */
+typedef struct StateManager StateManager;
+
+/**
+ * A state of the game.
+ *
+ * \since This struct is available since Engine 1.0.0.
+ *
+ * \sa State_Create
+ */
+typedef struct State State;
+
+struct State {
+  void *memory; /**< The memory of the state. It can be anything and is managed
+                   by the state itself. */
+  void (*init)(
+      void **memory,
+      StateManager *manager); /**< The initialization function of the state. */
+  void (*destroy)(void *memory); /**< The destroying function of the state. */
+  bool (*update)(
+      void *memory,
+      float delta,
+      StateManager *manager); /**< The function that is called to let the state
+                                 updates. The delta parameter is the number of
+                                 seconds since previous call. */
+  bool (*render)(const void *memory,
+                 SDL_Renderer *renderer); /**< The function that is called to
+                                             let the state renders. */
+  bool (*processEvent)(void *memory,
+                       const SDL_Event *event,
+                       StateManager *manager); /**< The function to let the
+                                                  state process an event. */
+};
 
 State *State_Create();
-void State_SetInit(State *state, void (*init)(void **memory));
+void State_SetInit(State *state,
+                   void (*init)(void **memory, StateManager *manager));
 void State_SetDestroy(State *state, void (*destroy)(void *memory));
-void State_SetUpdate(State *state, bool (*update)(void *memory, float delta));
+void State_SetUpdate(State *state,
+                     bool (*update)(void *memory,
+                                    float delta,
+                                    StateManager *manager));
 void State_SetRender(State *state,
                      bool (*render)(const void *memory,
                                     SDL_Renderer *renderer));
 void State_SetProcessEvent(State *state,
                            bool (*process)(void *memory,
-                                           const SDL_Event *event));
+                                           const SDL_Event *event,
+                                           StateManager *manager));
 
-typedef struct {
+struct StateManager {
   State **states;
   int capacity;
   int top;
-} StateManager;
+};
 
-StateManager *StateManager_Create();
+StateManager *StateManager_Create(unsigned int capacity);
 void StateManager_Free(StateManager *manager);
 int StateManager_Push(StateManager *manager, State *state);
 int StateManager_Pop(StateManager *manager);

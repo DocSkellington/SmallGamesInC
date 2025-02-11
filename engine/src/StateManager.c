@@ -22,10 +22,17 @@
 
 State *State_Create() {
   State *state = SDL_malloc(sizeof(State));
+  state->memory = nullptr;
+  state->init = nullptr;
+  state->destroy = nullptr;
+  state->update = nullptr;
+  state->render = nullptr;
+  state->processEvent = nullptr;
   return state;
 }
 
-void State_SetInit(State *state, void (*init)(void **memory)) {
+void State_SetInit(State *state,
+                   void (*init)(void **memory, StateManager *manager)) {
   state->init = init;
 }
 
@@ -33,7 +40,10 @@ void State_SetDestroy(State *state, void (*destroy)(void *memory)) {
   state->destroy = destroy;
 }
 
-void State_SetUpdate(State *state, bool (*update)(void *memory, float delta)) {
+void State_SetUpdate(State *state,
+                     bool (*update)(void *memory,
+                                    float delta,
+                                    StateManager *manager)) {
   state->update = update;
 }
 
@@ -45,17 +55,17 @@ void State_SetRender(State *state,
 
 void State_SetProcessEvent(State *state,
                            bool (*process)(void *memory,
-                                           const SDL_Event *event)) {
+                                           const SDL_Event *event,
+                                           StateManager *manager)) {
   state->processEvent = process;
 }
 
-State *StateManager_Top(StateManager *manager) {
-  return manager->states[manager->top];
-}
-
-StateManager *StateManager_Create() {
+StateManager *StateManager_Create(unsigned int capacity) {
+  if (0 == capacity) {
+    return nullptr;
+  }
   StateManager *manager = SDL_malloc(sizeof(StateManager));
-  manager->capacity = 3;
+  manager->capacity = capacity;
   manager->states = SDL_calloc(manager->capacity, sizeof(State *));
   manager->top = EMPTY_STACK;
   return manager;
@@ -70,15 +80,20 @@ void StateManager_Free(StateManager *manager) {
 }
 
 int StateManager_Push(StateManager *manager, State *state) {
+  if (state == nullptr) {
+    return STATEMANAGER_STATE_NULL;
+  }
   if (manager->top + 1 == manager->capacity) {
     return STATEMANAGER_FULL;
   }
 
-  manager->top++;
-  manager->states[manager->top] = state;
+  manager->states[++manager->top] = state;
 
-  if (state->init != nullptr) {
-    state->init(&state->memory);
+  if (state->init == nullptr) {
+    SDL_LogInfo(SDL_LOG_CATEGORY_SYSTEM,
+                "A state does not have an init function");
+  } else {
+    state->init(&state->memory, manager);
   }
 
   return STATEMANAGER_OK;
@@ -89,8 +104,8 @@ int StateManager_Pop(StateManager *manager) {
     return STATEMANAGER_EMPTY;
   }
 
-  State *state = StateManager_Top(manager);
-  if (state->destroy != nullptr) {
+  State *state = manager->states[manager->top];
+  if (state->destroy == nullptr) {
     SDL_LogInfo(SDL_LOG_CATEGORY_SYSTEM,
                 "A state does not have a destroy function");
   } else {
@@ -98,8 +113,7 @@ int StateManager_Pop(StateManager *manager) {
   }
   SDL_free(state);
 
-  manager->states[manager->top] = nullptr;
-  manager->top--;
+  manager->states[manager->top--] = nullptr;
 
   return STATEMANAGER_OK;
 }
@@ -114,7 +128,7 @@ void StateManager_Update(StateManager *manager, float delta) {
                   "A state does not have an update function");
       cont = false;
     } else {
-      cont = state->update(state->memory, delta);
+      cont = state->update(state->memory, delta, manager);
     }
     current--;
   }
@@ -146,7 +160,7 @@ void StateManager_ProcessEvent(StateManager *manager, const SDL_Event *event) {
                   "A state does not have a process event function");
       cont = false;
     } else {
-      cont = state->processEvent(state->memory, event);
+      cont = state->processEvent(state->memory, event, manager);
     }
     current--;
   }
