@@ -75,7 +75,7 @@ struct State {
    * The update function of the state.
    *
    * \param memory The memory of this state.
-   * \param delta The number of milliseconds since previous call.
+   * \param delta The number of milliseconds since the start of the previous frame.
    * \param manager The state manager that called this function.
    * \return <code>true</code> to let the state manager call the update function
    * of the next state, or <code>false</code> to not let it.
@@ -107,7 +107,7 @@ struct State {
    *
    * \sa State_SetRender
    */
-  void (*render)(const void *memory, SDL_Renderer *renderer);
+  void (*render)(void *memory, SDL_Renderer *renderer);
 
   /**
    * The function to process an event.
@@ -134,8 +134,7 @@ void State_SetUpdate(State *state,
 void State_SetIsTransparent(State *state,
                             bool (*isTransparent)(const void *memory));
 void State_SetRender(State *state,
-                     void (*render)(const void *memory,
-                                    SDL_Renderer *renderer));
+                     void (*render)(void *memory, SDL_Renderer *renderer));
 void State_SetProcessEvent(State *state,
                            bool (*process)(void *memory,
                                            SDL_Event *event,

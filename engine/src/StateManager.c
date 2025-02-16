@@ -24,6 +24,7 @@ State *State_Create() {
   state->init = nullptr;
   state->destroy = nullptr;
   state->update = nullptr;
+  state->isTransparent = nullptr;
   state->render = nullptr;
   state->processEvent = nullptr;
   return state;
@@ -51,7 +52,7 @@ void State_SetIsTransparent(State *state,
 }
 
 void State_SetRender(State *state,
-                     void (*render)(const void *memory,
+                     void (*render)(void *memory,
                                     SDL_Renderer *renderer)) {
   state->render = render;
 }
@@ -141,7 +142,7 @@ void StateManager_Render(const StateManager *manager, SDL_Renderer *renderer) {
   bool cont = true;
   // Seek deepest state to render in the stack
   while (current != EMPTY_STACK && cont) {
-    State *state = manager->states[current];
+    const State *state = manager->states[current];
     if (state->isTransparent == nullptr) {
       SDL_LogInfo(SDL_LOG_CATEGORY_SYSTEM,
                   "A state does not have a isTransparent function");
