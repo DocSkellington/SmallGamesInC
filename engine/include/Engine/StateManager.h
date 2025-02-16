@@ -161,7 +161,7 @@ struct StateManager {
   /**
    * How many states this manager can handle.
    */
-  const unsigned int capacity;
+  const int capacity;
   /**
    * The index of the top element in the stack.
    */
