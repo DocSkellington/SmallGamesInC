@@ -8,7 +8,7 @@ set(SOURCE_LIST
 
 add_library(Engine ${SOURCE_LIST} ${HEADER_LIST})
 
-set_property(TARGET Engine PROPERTY C_STANDARD 23)
+set_target_properties(Engine PROPERTIES C_STANDARD 23)
 
 target_include_directories(Engine PUBLIC include)
 target_link_libraries(Engine PUBLIC SDL3::SDL3)
