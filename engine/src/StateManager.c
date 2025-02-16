@@ -15,8 +15,6 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 #include "Engine/StateManager.h"
-#include "SDL3/SDL_log.h"
-#include <bits/posix2_lim.h>
 
 #define EMPTY_STACK -1
 
@@ -42,20 +40,25 @@ void State_SetDestroy(State *state, void (*destroy)(void *memory)) {
 
 void State_SetUpdate(State *state,
                      bool (*update)(void *memory,
-                                    float delta,
+                                    Uint64 delta,
                                     StateManager *manager)) {
   state->update = update;
 }
 
+void State_SetIsTransparent(State *state,
+                            bool (*isTransparent)(const void *memory)) {
+  state->isTransparent = isTransparent;
+}
+
 void State_SetRender(State *state,
-                     bool (*render)(const void *memory,
+                     void (*render)(const void *memory,
                                     SDL_Renderer *renderer)) {
   state->render = render;
 }
 
 void State_SetProcessEvent(State *state,
                            bool (*process)(void *memory,
-                                           const SDL_Event *event,
+                                           SDL_Event *event,
                                            StateManager *manager)) {
   state->processEvent = process;
 }
@@ -64,10 +67,9 @@ StateManager *StateManager_Create(unsigned int capacity) {
   if (0 == capacity) {
     return nullptr;
   }
+  StateManager managerInit = {SDL_calloc(capacity, sizeof(State *)), capacity, EMPTY_STACK};
   StateManager *manager = SDL_malloc(sizeof(StateManager));
-  manager->capacity = capacity;
-  manager->states = SDL_calloc(manager->capacity, sizeof(State *));
-  manager->top = EMPTY_STACK;
+  SDL_memcpy(manager, &managerInit, sizeof(StateManager));
   return manager;
 }
 
@@ -137,20 +139,34 @@ void StateManager_Update(StateManager *manager, float delta) {
 void StateManager_Render(const StateManager *manager, SDL_Renderer *renderer) {
   int current = manager->top;
   bool cont = true;
+  // Seek deepest state to render in the stack
   while (current != EMPTY_STACK && cont) {
+    State *state = manager->states[current];
+    if (state->isTransparent == nullptr) {
+      SDL_LogInfo(SDL_LOG_CATEGORY_SYSTEM,
+                  "A state does not have a isTransparent function");
+      cont = false;
+    } else {
+      cont = state->isTransparent(state->memory);
+    }
+    current--;
+  }
+  current++;
+
+  // Render from the found state
+  while (current != manager->top + 1) {
     State *state = manager->states[current];
     if (state->render == nullptr) {
       SDL_LogInfo(SDL_LOG_CATEGORY_SYSTEM,
                   "A state does not have a render function");
-      cont = false;
     } else {
-      cont = state->render(state->memory, renderer);
+      state->render(state->memory, renderer);
     }
-    current--;
+    current++;
   }
 }
 
-void StateManager_ProcessEvent(StateManager *manager, const SDL_Event *event) {
+void StateManager_ProcessEvent(StateManager *manager, SDL_Event *event) {
   int current = manager->top;
   bool cont = true;
   while (current != EMPTY_STACK && cont) {
