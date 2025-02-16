@@ -1,4 +1,4 @@
-add_executable(FlappyBird src/main.c)
+add_executable(FlappyBird EXCLUDE_FROM_ALL src/main.c)
 
 target_sources(FlappyBird PRIVATE src/Objects.c)
 
