@@ -1,5 +1,22 @@
+/* Small game engine in C.
+  Copyright (C) 2025 Gaëtan Staquet <gaetan.staquet@gmail.com>
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
 #include "Engine/StateManager.h"
 #include "EngineTest.h"
+#include "SDL3/SDL_stdinc.h"
 #include <check.h>
 #include <stdlib.h>
 
@@ -144,20 +161,20 @@ typedef struct {
 
 void init_state(void **memory, StateManager *) {
   *memory = malloc(sizeof(memory));
-  ((Memory*)*memory)->n = 5;
+  ((Memory *)*memory)->n = 5;
 }
 
 void destroy_state(void *memory) {
   free(memory);
 }
 
-bool update_state_passthrough(void *memory, float, StateManager *) {
-  ((Memory*)memory)->n *= 2;
+bool update_state_passthrough(void *memory, Uint64, StateManager *) {
+  ((Memory *)memory)->n *= 2;
   return true;
 }
 
-bool update_state_no_passthrough(void *memory, float, StateManager *) {
-  ((Memory*)memory)->n *= 2;
+bool update_state_no_passthrough(void *memory, Uint64, StateManager *) {
+  ((Memory *)memory)->n *= 2;
   return false;
 }
 
@@ -168,7 +185,7 @@ START_TEST(init_destroy_memory) {
   State_SetDestroy(state, destroy_state);
 
   StateManager_Push(manager, state);
-  ck_assert_int_eq(((Memory*)state->memory)->n, 5);
+  ck_assert_int_eq(((Memory *)state->memory)->n, 5);
 
   StateManager_Free(manager);
 }
