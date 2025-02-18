@@ -6,6 +6,7 @@ set(HEADER_LIST
 
 set(SOURCE_LIST
   "${SmallGames_SOURCE_DIR}/engine/src/StateManager.c"
+  "${SmallGames_SOURCE_DIR}/engine/src/Bindings.c"
 )
 
 add_library(Engine ${SOURCE_LIST} ${HEADER_LIST})
@@ -18,7 +19,7 @@ else()
 endif()
 
 target_include_directories(Engine PUBLIC include)
-target_link_libraries(Engine PUBLIC SDL3::SDL3)
+target_link_libraries(Engine PUBLIC SDL3::SDL3 PUBLIC PkgConfig::glib)
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
   add_subdirectory(tests)

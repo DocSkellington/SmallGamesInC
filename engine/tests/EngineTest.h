@@ -22,3 +22,4 @@ void setup(void);
 void clean(void);
 
 Suite *makeStateManagerSuite(void);
+Suite *makeBindingsSuite(void);
