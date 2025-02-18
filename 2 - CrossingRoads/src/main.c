@@ -55,20 +55,18 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
 
   if (!SDL_Init(SDL_INIT_VIDEO)) {
     SDL_LogCritical(
-        SDL_LOG_CATEGORY_SYSTEM, "Couldn't initialize SDL: %s", SDL_GetError());
+        SDL_LOG_CATEGORY_APPLICATION, "Couldn't initialize SDL: %s", SDL_GetError());
     return SDL_APP_FAILURE;
   }
 
   if(!TTF_Init()) {
-    SDL_LogCritical(SDL_LOG_CATEGORY_SYSTEM, "Couldn't initialize TTF: %s", SDL_GetError());
+    SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "Couldn't initialize TTF: %s", SDL_GetError());
     return SDL_APP_FAILURE;
   }
 
   AppState *state = SDL_malloc(sizeof(AppState));
   state->lastFrameEndNS = 0;
   setTargetTick(state, 60);
-  state->stateManager = StateManager_Create(STATEMANAGER_CAPACITY);
-  StateManager_Push(state->stateManager, createStartState());
   *appstate = state;
 
   state->window = SDL_CreateWindow("Crossing Roads",
@@ -77,17 +75,24 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
                                    SDL_WINDOW_OPENGL);
   if (state->window == nullptr) {
     SDL_LogCritical(
-        SDL_LOG_CATEGORY_SYSTEM, "Couldn't create window: %s", SDL_GetError());
+        SDL_LOG_CATEGORY_APPLICATION, "Couldn't create window: %s", SDL_GetError());
     return SDL_APP_FAILURE;
   }
 
   state->renderer = SDL_CreateRenderer(state->window, "vulkan,opengl");
   if (state->renderer == nullptr) {
-    SDL_LogCritical(SDL_LOG_CATEGORY_SYSTEM,
+    SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
                     "Couldn't create renderer: %s",
                     SDL_GetError());
     return SDL_APP_FAILURE;
   }
+
+  state->stateManager = StateManager_Create(STATEMANAGER_CAPACITY, state->window);
+  if (state->stateManager == nullptr) {
+    SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create state manager");
+    return SDL_APP_FAILURE;
+  }
+  StateManager_Push(state->stateManager, createStartState());
 
   return SDL_APP_CONTINUE;
 }

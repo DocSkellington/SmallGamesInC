@@ -16,9 +16,7 @@
 */
 #include "Engine/StateManager.h"
 #include "SDL3/SDL.h"
-#include "SDL3/SDL_events.h"
-#include "SDL3/SDL_stdinc.h"
-#include "SDL3/SDL_timer.h"
+#include "SDL3/SDL_render.h"
 #include "SDL3_ttf/SDL_ttf.h"
 #include "States.h"
 
@@ -30,7 +28,6 @@ struct Memory {
   TTF_Font *font;
 
   struct {
-    SDL_Surface **surfaces;
     SDL_Texture **textures;
     void (**callbacks)(Memory *, StateManager *);
     unsigned int size;
@@ -53,7 +50,8 @@ void on_exit(Memory *memory, StateManager *manager) {
   SDL_PushEvent(&quitEvent); // SDL copies the event
 }
 
-void init(void **memory, StateManager *) {
+void init(void **memory, StateManager * manager) {
+  SDL_Renderer *renderer = SDL_GetRenderer(manager->mainWindow);
   Memory *m = SDL_malloc(sizeof(Memory));
   m->selection = 0;
   m->font = TTF_OpenFont("resources/freefont-ttf/sfd/FreeSerif.ttf", 32);
@@ -70,17 +68,21 @@ void init(void **memory, StateManager *) {
   m->unselectedColor = white;
 
   m->texts.size = 3;
-  m->texts.surfaces = SDL_calloc(m->texts.size, sizeof(SDL_Surface *));
   m->texts.textures = SDL_calloc(m->texts.size, sizeof(SDL_Texture *));
   m->texts.callbacks = SDL_calloc(m->texts.size, sizeof(void (*)()));
-  m->texts.surfaces[0] = TTF_RenderText_Blended(m->font, "Start", 0, white);
-  m->texts.textures[0] = nullptr;
+  SDL_Surface *surface = TTF_RenderText_Blended(m->font, "Start", 0, white);
+  m->texts.textures[0] = SDL_CreateTextureFromSurface(renderer, surface);
+  SDL_DestroySurface(surface);
   m->texts.callbacks[0] = on_start;
-  m->texts.surfaces[1] = TTF_RenderText_Blended(m->font, "Options", 0, white);
-  m->texts.textures[1] = nullptr;
+  
+  surface = TTF_RenderText_Blended(m->font, "Options", 0, white);
+  m->texts.textures[1] = SDL_CreateTextureFromSurface(renderer, surface);
+  SDL_DestroySurface(surface);
   m->texts.callbacks[1] = on_options;
-  m->texts.surfaces[2] = TTF_RenderText_Blended(m->font, "Exit", 0, white);
-  m->texts.textures[2] = nullptr;
+
+  surface = TTF_RenderText_Blended(m->font, "Exit", 0, white);
+  m->texts.textures[2] = SDL_CreateTextureFromSurface(renderer, surface);
+  SDL_DestroySurface(surface);
   m->texts.callbacks[2] = on_exit;
 
   *memory = m;
@@ -89,13 +91,12 @@ void init(void **memory, StateManager *) {
 void destroy(void *memory) {
   Memory *m = memory;
   for (unsigned int i = 0; i < m->texts.size; i++) {
-    SDL_DestroySurface(m->texts.surfaces[i]);
     if (m->texts.textures[i] != nullptr) {
       SDL_DestroyTexture(m->texts.textures[i]);
     }
   }
   SDL_free(m->texts.callbacks);
-  SDL_free(m->texts.surfaces);
+  SDL_free(m->texts.textures);
   TTF_CloseFont(m->font);
   SDL_free(memory);
 }
@@ -104,11 +105,6 @@ void render(void *memory, SDL_Renderer *renderer) {
   const Memory *m = memory;
 
   for (unsigned int i = 0; i < m->texts.size; i++) {
-    if (m->texts.textures[i] == nullptr) {
-      m->texts.textures[i] =
-          SDL_CreateTextureFromSurface(renderer, m->texts.surfaces[i]);
-    }
-
     SDL_Texture *texture = m->texts.textures[i];
     int w = 0, h = 0;
     SDL_GetRenderOutputSize(renderer, &w, &h);
