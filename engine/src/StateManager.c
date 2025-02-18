@@ -52,8 +52,7 @@ void State_SetIsTransparent(State *state,
 }
 
 void State_SetRender(State *state,
-                     void (*render)(void *memory,
-                                    SDL_Renderer *renderer)) {
+                     void (*render)(void *memory, SDL_Renderer *renderer)) {
   state->render = render;
 }
 
@@ -64,11 +63,12 @@ void State_SetProcessEvent(State *state,
   state->processEvent = process;
 }
 
-StateManager *StateManager_Create(unsigned int capacity) {
+StateManager *StateManager_Create(unsigned int capacity, SDL_Window *window) {
   if (0 == capacity) {
     return nullptr;
   }
-  StateManager managerInit = {SDL_calloc(capacity, sizeof(State *)), capacity, EMPTY_STACK};
+  StateManager managerInit = {
+      window, SDL_calloc(capacity, sizeof(State *)), capacity, EMPTY_STACK};
   StateManager *manager = SDL_malloc(sizeof(StateManager));
   SDL_memcpy(manager, &managerInit, sizeof(StateManager));
   return manager;

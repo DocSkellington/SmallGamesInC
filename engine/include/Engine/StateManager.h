@@ -154,6 +154,10 @@ void State_SetProcessEvent(State *state,
  */
 struct StateManager {
   /**
+   * The main window of this application.
+   */
+  SDL_Window *mainWindow;
+  /**
    * The stack of states of the manager.
    */
   State **states;
@@ -167,7 +171,7 @@ struct StateManager {
   int top;
 };
 
-StateManager *StateManager_Create(unsigned int capacity);
+StateManager *StateManager_Create(unsigned int capacity, SDL_Window *window);
 void StateManager_Free(StateManager *manager);
 int StateManager_Push(StateManager *manager, State *state);
 int StateManager_Pop(StateManager *manager);
