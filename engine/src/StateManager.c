@@ -30,6 +30,10 @@ State *State_Create() {
   return state;
 }
 
+void *State_GetMemory(State *state) {
+  return state->memory;
+}
+
 void State_SetInit(State *state,
                    void (*init)(void **memory, StateManager *manager)) {
   state->init = init;

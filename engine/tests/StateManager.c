@@ -32,7 +32,6 @@ START_TEST(create_and_free) {
   manager = StateManager_Create(0, nullptr);
   ck_assert_ptr_null(manager);
 }
-
 END_TEST
 
 START_TEST(pop_empty) {
@@ -43,7 +42,6 @@ START_TEST(pop_empty) {
 
   StateManager_Free(manager);
 }
-
 END_TEST
 
 START_TEST(push_1) {
@@ -56,7 +54,6 @@ START_TEST(push_1) {
 
   StateManager_Free(manager);
 }
-
 END_TEST
 
 START_TEST(push_2) {
@@ -72,7 +69,6 @@ START_TEST(push_2) {
 
   StateManager_Free(manager);
 }
-
 END_TEST
 
 START_TEST(push_3) {
@@ -91,7 +87,6 @@ START_TEST(push_3) {
 
   StateManager_Free(manager);
 }
-
 END_TEST
 
 START_TEST(push_exceeds_capacity) {
@@ -110,7 +105,6 @@ START_TEST(push_exceeds_capacity) {
 
   StateManager_Free(manager);
 }
-
 END_TEST
 
 START_TEST(push_pop_1) {
@@ -125,7 +119,6 @@ START_TEST(push_pop_1) {
 
   StateManager_Free(manager);
 }
-
 END_TEST
 
 START_TEST(push_pop_2) {
@@ -152,7 +145,6 @@ START_TEST(push_pop_2) {
 
   StateManager_Free(manager);
 }
-
 END_TEST
 
 typedef struct {
@@ -185,10 +177,12 @@ START_TEST(init_destroy_memory) {
   State_SetDestroy(state, destroy_state);
 
   StateManager_Push(manager, state);
-  ck_assert_int_eq(((Memory *)state->memory)->n, 5);
+  Memory *m = State_GetMemory(state);
+  ck_assert_int_eq(m->n, 5);
 
   StateManager_Free(manager);
 }
+END_TEST
 
 START_TEST(update_passthrough) {
   StateManager *manager = StateManager_Create(2, nullptr);
@@ -204,8 +198,8 @@ START_TEST(update_passthrough) {
 
   StateManager_Push(manager, bottom);
   StateManager_Push(manager, top);
-  Memory *mBottom = bottom->memory;
-  Memory *mTop = top->memory;
+  Memory *mBottom = State_GetMemory(bottom);
+  Memory *mTop = State_GetMemory(top);
   ck_assert_int_eq(mBottom->n, 5);
   ck_assert_int_eq(mTop->n, 5);
 
@@ -215,6 +209,7 @@ START_TEST(update_passthrough) {
 
   StateManager_Free(manager);
 }
+END_TEST
 
 START_TEST(update_no_passthrough) {
   StateManager *manager = StateManager_Create(2, nullptr);
@@ -230,8 +225,8 @@ START_TEST(update_no_passthrough) {
 
   StateManager_Push(manager, bottom);
   StateManager_Push(manager, top);
-  Memory *mBottom = bottom->memory;
-  Memory *mTop = top->memory;
+  Memory *mBottom = State_GetMemory(bottom);
+  Memory *mTop = State_GetMemory(top);
   ck_assert_int_eq(mBottom->n, 5);
   ck_assert_int_eq(mTop->n, 5);
 
@@ -241,6 +236,7 @@ START_TEST(update_no_passthrough) {
 
   StateManager_Free(manager);
 }
+END_TEST
 
 Suite *makeStateManagerSuite(void) {
   Suite *suite = suite_create("State manager");

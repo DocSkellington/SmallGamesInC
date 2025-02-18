@@ -124,6 +124,7 @@ struct State {
 };
 
 State *State_Create();
+void *State_GetMemory(State *state);
 void State_SetInit(State *state,
                    void (*init)(void **memory, StateManager *manager));
 void State_SetDestroy(State *state, void (*destroy)(void *memory));
