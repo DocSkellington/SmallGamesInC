@@ -14,9 +14,9 @@
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+#include "Engine/Bindings.h"
 #include "Engine/StateManager.h"
 #include "SDL3/SDL.h"
-#include "SDL3/SDL_render.h"
 #include "SDL3_ttf/SDL_ttf.h"
 #include "States.h"
 
@@ -34,15 +34,15 @@ struct Memory {
   } texts;
 };
 
-void on_start(Memory *memory, StateManager *manager) {
+static void onStart(Memory *memory, StateManager *manager) {
   SDL_Log("Start not implemented");
 }
 
-void on_options(Memory *memory, StateManager *manager) {
-  SDL_Log("Options not implemented");
+static void onOptions(Memory *memory, StateManager *manager) {
+  StateManager_Push(manager, createOptionsState());
 }
 
-void on_exit(Memory *memory, StateManager *manager) {
+static void onExit(Memory *memory, StateManager *manager) {
   SDL_Event quitEvent;
   SDL_zero(quitEvent);
   quitEvent.type = SDL_EVENT_QUIT;
@@ -50,12 +50,12 @@ void on_exit(Memory *memory, StateManager *manager) {
   SDL_PushEvent(&quitEvent); // SDL copies the event
 }
 
-void init(void **memory, StateManager * manager) {
+static void init(void **memory, StateManager *manager) {
   SDL_Renderer *renderer = SDL_GetRenderer(manager->mainWindow);
   Memory *m = SDL_malloc(sizeof(Memory));
   m->selection = 0;
   m->font = TTF_OpenFont("resources/freefont-ttf/sfd/FreeSerif.ttf", 32);
-  if (m->font == NULL) {
+  if (m->font == nullptr) {
     SDL_LogError(SDL_LOG_CATEGORY_SYSTEM,
                  "Impossible to load font file: %s",
                  SDL_GetError());
@@ -73,22 +73,22 @@ void init(void **memory, StateManager * manager) {
   SDL_Surface *surface = TTF_RenderText_Blended(m->font, "Start", 0, white);
   m->texts.textures[0] = SDL_CreateTextureFromSurface(renderer, surface);
   SDL_DestroySurface(surface);
-  m->texts.callbacks[0] = on_start;
-  
+  m->texts.callbacks[0] = onStart;
+
   surface = TTF_RenderText_Blended(m->font, "Options", 0, white);
   m->texts.textures[1] = SDL_CreateTextureFromSurface(renderer, surface);
   SDL_DestroySurface(surface);
-  m->texts.callbacks[1] = on_options;
+  m->texts.callbacks[1] = onOptions;
 
   surface = TTF_RenderText_Blended(m->font, "Exit", 0, white);
   m->texts.textures[2] = SDL_CreateTextureFromSurface(renderer, surface);
   SDL_DestroySurface(surface);
-  m->texts.callbacks[2] = on_exit;
+  m->texts.callbacks[2] = onExit;
 
   *memory = m;
 }
 
-void destroy(void *memory) {
+static void destroy(void *memory) {
   Memory *m = memory;
   for (unsigned int i = 0; i < m->texts.size; i++) {
     if (m->texts.textures[i] != nullptr) {
@@ -101,7 +101,7 @@ void destroy(void *memory) {
   SDL_free(memory);
 }
 
-void render(void *memory, SDL_Renderer *renderer) {
+static void render(void *memory, SDL_Renderer *renderer) {
   const Memory *m = memory;
 
   for (unsigned int i = 0; i < m->texts.size; i++) {
@@ -111,7 +111,7 @@ void render(void *memory, SDL_Renderer *renderer) {
     SDL_FRect dst;
     SDL_GetTextureSize(texture, &dst.w, &dst.h);
     dst.x = (w - dst.w) / 2;
-    dst.y = (h - dst.h) / 2 + (i * dst.h) * 3. / 4;
+    dst.y = (h - dst.h) / 2 + (i * 60) * 3. / 4;
 
     if (m->selection == i) {
       SDL_SetTextureColorMod(
@@ -122,21 +122,25 @@ void render(void *memory, SDL_Renderer *renderer) {
                              m->unselectedColor.g,
                              m->unselectedColor.b);
     }
-    SDL_RenderTexture(renderer, texture, NULL, &dst);
+    SDL_RenderTexture(renderer, texture, nullptr, &dst);
   }
 }
 
-bool processEvent(void *memory, SDL_Event *event, StateManager *manager) {
+static bool
+processEvent(void *memory, SDL_Event *event, StateManager *manager) {
   Memory *m = memory;
+  const Bindings *bindings = Options_GetBindings(manager->options);
+
   if (event->type == SDL_EVENT_KEY_DOWN) {
-    if (event->key.scancode == SDL_SCANCODE_DOWN &&
+    if (Bindings_Matches(bindings, ACTION_MENU_DOWN, event->key.scancode) &&
         m->selection + 1 < m->texts.size) {
       m->selection++;
-    } else if (event->key.scancode == SDL_SCANCODE_UP && m->selection > 0) {
+    } else if (Bindings_Matches(
+                   bindings, ACTION_MENU_UP, event->key.scancode) &&
+               m->selection > 0) {
       m->selection--;
-    } else if (event->key.scancode == SDL_SCANCODE_SPACE ||
-               event->key.scancode == SDL_SCANCODE_KP_ENTER ||
-               event->key.scancode == SDL_SCANCODE_RETURN) {
+    } else if (Bindings_Matches(
+                   bindings, ACTION_MENU_OK, event->key.scancode)) {
       if (m->texts.callbacks[m->selection] != nullptr) {
         m->texts.callbacks[m->selection](m, manager);
       }
