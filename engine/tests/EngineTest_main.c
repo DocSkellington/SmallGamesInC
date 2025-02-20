@@ -22,6 +22,7 @@ int main(void) {
   setup();
   SRunner *runner = srunner_create(makeStateManagerSuite());
   srunner_add_suite(runner, makeBindingsSuite());
+  srunner_add_suite(runner, makeOptionsSuite());
   // srunner_set_fork_status(runner, CK_NOFORK);
   srunner_run_all(runner, CK_VERBOSE);
   clean();

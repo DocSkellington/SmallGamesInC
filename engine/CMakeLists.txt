@@ -7,6 +7,7 @@ set(HEADER_LIST
 set(SOURCE_LIST
   "${SmallGames_SOURCE_DIR}/engine/src/StateManager.c"
   "${SmallGames_SOURCE_DIR}/engine/src/Bindings.c"
+  "${SmallGames_SOURCE_DIR}/engine/src/Options.c"
 )
 
 add_library(Engine ${SOURCE_LIST} ${HEADER_LIST})

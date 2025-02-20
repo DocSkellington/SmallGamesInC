@@ -23,3 +23,4 @@ void clean(void);
 
 Suite *makeStateManagerSuite(void);
 Suite *makeBindingsSuite(void);
+Suite *makeOptionsSuite(void);

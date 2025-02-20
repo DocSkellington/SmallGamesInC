@@ -5,6 +5,7 @@ SET(STATE_MANAGER_SOURCES
   "EngineTest_master.c"
   "StateManager.c"
   "Bindings.c"
+  "Options.c"
 )
 
 add_executable(EngineTest ${STATE_MANAGER_SOURCES})
