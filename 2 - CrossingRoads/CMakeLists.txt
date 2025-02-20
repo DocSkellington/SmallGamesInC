@@ -1,6 +1,7 @@
 set(SOURCE_LIST
     "src/main.c"
     "src/states/startState.c"
+    "src/states/optionsState.c"
 )
 
 add_executable(CrossingRoads EXCLUDE_FROM_ALL ${SOURCE_LIST})

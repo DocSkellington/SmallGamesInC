@@ -17,4 +17,5 @@
 #pragma once
 #include "Engine/StateManager.h"
 
-State* createStartState();
+State *createStartState();
+State *createOptionsState();
