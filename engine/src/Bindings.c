@@ -27,51 +27,51 @@ struct Bindings {
   GHashTable *aliases;
 };
 
-void onKeyDestroy(gpointer data) {
+static void onKeyDestroy(gpointer data) {
   SDL_free(data);
 }
 
-void onValueDestroy(gpointer data) {
+static void onValueDestroy(gpointer data) {
   Container *cont = data;
   g_slist_free_full(cont->list, onKeyDestroy);
   SDL_free(cont);
 }
 
-gpointer makeActionPointer(Action action) {
+static inline gpointer makeActionPointer(Action action) {
   Action *p = SDL_malloc(sizeof(Action));
-  *p = action;
+  SDL_memcpy(p, &action, sizeof(Action));
   return p;
 }
 
-gpointer makeScancodePointer(SDL_Scancode code) {
+static inline gpointer makeScancodePointer(SDL_Scancode code) {
   SDL_Scancode *p = SDL_malloc(sizeof(SDL_Scancode));
-  *p = code;
+  SDL_memcpy(p, &code, sizeof(SDL_Scancode));
   return p;
 }
 
-void addCodeToContainer(Container *container, SDL_Scancode code) {
+static void addCodeToContainer(Container *container, SDL_Scancode code) {
   container->list = g_slist_append(container->list, makeScancodePointer(code));
 }
 
-void addActionToContainer(Container *container, Action action) {
+static void addActionToContainer(Container *container, Action action) {
   container->list = g_slist_append(container->list, makeActionPointer(action));
 }
 
-Container *createContainerScancode(SDL_Scancode code) {
+static Container *createContainerScancode(SDL_Scancode code) {
   Container *container = SDL_malloc(sizeof(Container));
   container->list = nullptr;
   addCodeToContainer(container, code);
   return container;
 }
 
-Container *createContainerAction(Action action) {
+static Container *createContainerAction(Action action) {
   Container *container = SDL_malloc(sizeof(Container));
   container->list = nullptr;
   addActionToContainer(container, action);
   return container;
 }
 
-gint compareCode(gconstpointer a, gconstpointer b) {
+static gint compareCode(gconstpointer a, gconstpointer b) {
   const SDL_Scancode *a1 = a;
   const SDL_Scancode *a2 = b;
   if (*a1 < *a2) {
@@ -82,7 +82,7 @@ gint compareCode(gconstpointer a, gconstpointer b) {
   return 1;
 }
 
-gint compareAction(gconstpointer a, gconstpointer b) {
+static gint compareAction(gconstpointer a, gconstpointer b) {
   const Action *a1 = a;
   const Action *a2 = b;
   if (*a1 < *a2) {
@@ -93,7 +93,7 @@ gint compareAction(gconstpointer a, gconstpointer b) {
   return 1;
 }
 
-void removeCodeFromContainer(Container *container, SDL_Scancode code) {
+static void removeCodeFromContainer(Container *container, SDL_Scancode code) {
   if (container == nullptr) {
     return;
   }
@@ -102,7 +102,7 @@ void removeCodeFromContainer(Container *container, SDL_Scancode code) {
   g_slist_free_1(node);
 }
 
-void removeActionFromContainer(Container *container, Action action) {
+static void removeActionFromContainer(Container *container, Action action) {
   if (container == nullptr) {
     return;
   }
@@ -111,17 +111,17 @@ void removeActionFromContainer(Container *container, Action action) {
   g_slist_free_1(node);
 }
 
-bool hasAssociation(Bindings *bindings, Action action) {
+static bool hasAssociation(Bindings *bindings, Action action) {
   return g_hash_table_contains(bindings->associations, &action);
 }
 
-bool hasAlias(Bindings *bindings, Action action) {
+static bool hasAlias(Bindings *bindings, Action action) {
   return g_hash_table_contains(bindings->aliases, &action);
 }
 
-void containerToArray(Container *container,
-                      SDL_Scancode **codes,
-                      unsigned int *size) {
+static void containerToArray(Container *container,
+                             SDL_Scancode **codes,
+                             unsigned int *size) {
   GSList *codes_list = container->list;
   *size = g_slist_length(codes_list);
   *codes = SDL_calloc(*size, sizeof(SDL_Scancode));
@@ -134,7 +134,7 @@ void containerToArray(Container *container,
   }
 }
 
-bool codeInContainer(Container *container, SDL_Scancode code) {
+static bool codeInContainer(Container *container, SDL_Scancode code) {
   if (container == nullptr) {
     return false;
   }
@@ -150,7 +150,7 @@ bool codeInContainer(Container *container, SDL_Scancode code) {
   return false;
 }
 
-bool codeInAliases(Bindings *bindings, Container *aliases, SDL_Scancode code) {
+static bool codeInAliases(Bindings *bindings, Container *aliases, SDL_Scancode code) {
   if (aliases == nullptr) {
     return false;
   }

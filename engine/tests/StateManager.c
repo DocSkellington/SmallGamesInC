@@ -151,21 +151,21 @@ typedef struct {
   int n;
 } Memory;
 
-void init_state(void **memory, StateManager *) {
+static void init_state(void **memory, StateManager *) {
   *memory = malloc(sizeof(memory));
   ((Memory *)*memory)->n = 5;
 }
 
-void destroy_state(void *memory) {
+static void destroy_state(void *memory) {
   free(memory);
 }
 
-bool update_state_passthrough(void *memory, Uint64, StateManager *) {
+static bool update_state_passthrough(void *memory, Uint64, StateManager *) {
   ((Memory *)memory)->n *= 2;
   return true;
 }
 
-bool update_state_no_passthrough(void *memory, Uint64, StateManager *) {
+static bool update_state_no_passthrough(void *memory, Uint64, StateManager *) {
   ((Memory *)memory)->n *= 2;
   return false;
 }
