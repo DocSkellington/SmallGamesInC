@@ -21,7 +21,7 @@
 #include <stdlib.h>
 
 START_TEST(create_and_free) {
-  StateManager *manager = StateManager_Create(3, nullptr);
+  StateManager *manager = StateManager_Create(3, nullptr, nullptr);
   ck_assert_ptr_nonnull(manager);
 
   ck_assert_int_eq(manager->top, -1);
@@ -29,13 +29,13 @@ START_TEST(create_and_free) {
 
   StateManager_Free(manager);
 
-  manager = StateManager_Create(0, nullptr);
+  manager = StateManager_Create(0, nullptr, nullptr);
   ck_assert_ptr_null(manager);
 }
 END_TEST
 
 START_TEST(pop_empty) {
-  StateManager *manager = StateManager_Create(2, nullptr);
+  StateManager *manager = StateManager_Create(2, nullptr, nullptr);
   ck_assert_ptr_nonnull(manager);
 
   ck_assert_int_eq(StateManager_Pop(manager), STATEMANAGER_EMPTY);
@@ -45,7 +45,7 @@ START_TEST(pop_empty) {
 END_TEST
 
 START_TEST(push_1) {
-  StateManager *manager = StateManager_Create(2, nullptr);
+  StateManager *manager = StateManager_Create(2, nullptr, nullptr);
   ck_assert_ptr_nonnull(manager);
 
   State *s1 = State_Create();
@@ -57,7 +57,7 @@ START_TEST(push_1) {
 END_TEST
 
 START_TEST(push_2) {
-  StateManager *manager = StateManager_Create(3, nullptr);
+  StateManager *manager = StateManager_Create(3, nullptr, nullptr);
   ck_assert_ptr_nonnull(manager);
 
   State *s1 = State_Create();
@@ -72,7 +72,7 @@ START_TEST(push_2) {
 END_TEST
 
 START_TEST(push_3) {
-  StateManager *manager = StateManager_Create(3, nullptr);
+  StateManager *manager = StateManager_Create(3, nullptr, nullptr);
   ck_assert_ptr_nonnull(manager);
 
   State *s1 = State_Create();
@@ -90,7 +90,7 @@ START_TEST(push_3) {
 END_TEST
 
 START_TEST(push_exceeds_capacity) {
-  StateManager *manager = StateManager_Create(2, nullptr);
+  StateManager *manager = StateManager_Create(2, nullptr, nullptr);
   ck_assert_ptr_nonnull(manager);
 
   State *s1 = State_Create();
@@ -108,7 +108,7 @@ START_TEST(push_exceeds_capacity) {
 END_TEST
 
 START_TEST(push_pop_1) {
-  StateManager *manager = StateManager_Create(3, nullptr);
+  StateManager *manager = StateManager_Create(3, nullptr, nullptr);
   ck_assert_ptr_nonnull(manager);
 
   State *s1 = State_Create();
@@ -122,7 +122,7 @@ START_TEST(push_pop_1) {
 END_TEST
 
 START_TEST(push_pop_2) {
-  StateManager *manager = StateManager_Create(3, nullptr);
+  StateManager *manager = StateManager_Create(3, nullptr, nullptr);
   ck_assert_ptr_nonnull(manager);
 
   State *s1 = State_Create();
@@ -171,7 +171,7 @@ static bool update_state_no_passthrough(void *memory, Uint64, StateManager *) {
 }
 
 START_TEST(init_destroy_memory) {
-  StateManager *manager = StateManager_Create(1, nullptr);
+  StateManager *manager = StateManager_Create(1, nullptr, nullptr);
   State *state = State_Create();
   State_SetInit(state, init_state);
   State_SetDestroy(state, destroy_state);
@@ -185,7 +185,7 @@ START_TEST(init_destroy_memory) {
 END_TEST
 
 START_TEST(update_passthrough) {
-  StateManager *manager = StateManager_Create(2, nullptr);
+  StateManager *manager = StateManager_Create(2, nullptr, nullptr);
   State *bottom = State_Create();
   State *top = State_Create();
 
@@ -212,7 +212,7 @@ START_TEST(update_passthrough) {
 END_TEST
 
 START_TEST(update_no_passthrough) {
-  StateManager *manager = StateManager_Create(2, nullptr);
+  StateManager *manager = StateManager_Create(2, nullptr, nullptr);
   State *bottom = State_Create();
   State *top = State_Create();
 

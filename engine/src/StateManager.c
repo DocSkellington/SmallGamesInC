@@ -67,12 +67,17 @@ void State_SetProcessEvent(State *state,
   state->processEvent = process;
 }
 
-StateManager *StateManager_Create(unsigned int capacity, SDL_Window *window) {
+StateManager *StateManager_Create(unsigned int capacity,
+                                  SDL_Window *window,
+                                  Options *options) {
   if (0 == capacity) {
     return nullptr;
   }
-  StateManager managerInit = {
-      window, SDL_calloc(capacity, sizeof(State *)), capacity, EMPTY_STACK};
+  StateManager managerInit = {window,
+                              options,
+                              SDL_calloc(capacity, sizeof(State *)),
+                              capacity,
+                              EMPTY_STACK};
   StateManager *manager = SDL_malloc(sizeof(StateManager));
   SDL_memcpy(manager, &managerInit, sizeof(StateManager));
   return manager;

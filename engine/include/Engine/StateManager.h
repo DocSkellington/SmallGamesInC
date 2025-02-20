@@ -16,6 +16,7 @@
 */
 #pragma once
 
+#include "Engine/Options.h"
 #include "SDL3/SDL.h"
 
 #define STATEMANAGER_OK 0
@@ -159,6 +160,10 @@ struct StateManager {
    */
   SDL_Window *mainWindow;
   /**
+   * The global options of the game.
+   */
+  Options *options;
+  /**
    * The stack of states of the manager.
    */
   State **states;
@@ -172,7 +177,7 @@ struct StateManager {
   int top;
 };
 
-StateManager *StateManager_Create(unsigned int capacity, SDL_Window *window);
+StateManager *StateManager_Create(unsigned int capacity, SDL_Window *window, Options *options);
 void StateManager_Free(StateManager *manager);
 int StateManager_Push(StateManager *manager, State *state);
 int StateManager_Pop(StateManager *manager);
