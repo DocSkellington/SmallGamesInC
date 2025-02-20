@@ -74,9 +74,11 @@ void Bindings_Set(Bindings *bindings, Action action, SDL_Scancode scancode);
 void Bindings_SetAlias(Bindings *bindings, Action action, Action alias);
 void Bindings_Add(Bindings *bindings, Action action, SDL_Scancode scancode);
 void Bindings_AddAlias(Bindings *bindings, Action action, Action alias);
-bool Bindings_Has(Bindings *bindings, Action action);
-void Bindings_Get(Bindings *bindings,
+bool Bindings_Has(const Bindings *bindings, Action action);
+void Bindings_Get(const Bindings *bindings,
                   Action action,
                   SDL_Scancode **scancodes,
                   unsigned int *length);
-bool Bindings_Matches(Bindings *bindings, Action action, SDL_Scancode scancode);
+bool Bindings_Matches(const Bindings *bindings,
+                      Action action,
+                      SDL_Scancode scancode);

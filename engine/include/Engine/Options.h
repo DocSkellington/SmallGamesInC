@@ -46,6 +46,8 @@ typedef enum {
  *
  * The functions \ref Options_Clear and \ref Options_ClearAll respectively
  * removes one pair and all pairs.
+ *
+ * \todo Save and load.
  */
 typedef struct Options Options;
 
@@ -59,7 +61,7 @@ void Options_SetWithDestroyFunction(Options *options,
                                     size_t count,
                                     void (*onDestroy)(void *value));
 void Options_SetNoCopy(Options *options, OptionName name, void *value);
-bool Options_Has(Options *options, OptionName name);
-void *Options_Get(Options *options, OptionName name);
+bool Options_Has(const Options *options, OptionName name);
+void *Options_Get(const Options *options, OptionName name);
 void Options_Clear(Options *options, OptionName name);
 void Options_ClearAll(Options *options);

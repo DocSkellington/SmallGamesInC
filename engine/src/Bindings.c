@@ -111,11 +111,11 @@ static void removeActionFromContainer(Container *container, Action action) {
   g_slist_free_1(node);
 }
 
-static bool hasAssociation(Bindings *bindings, Action action) {
+static bool hasAssociation(const Bindings *bindings, Action action) {
   return g_hash_table_contains(bindings->associations, &action);
 }
 
-static bool hasAlias(Bindings *bindings, Action action) {
+static bool hasAlias(const Bindings *bindings, Action action) {
   return g_hash_table_contains(bindings->aliases, &action);
 }
 
@@ -150,7 +150,8 @@ static bool codeInContainer(Container *container, SDL_Scancode code) {
   return false;
 }
 
-static bool codeInAliases(Bindings *bindings, Container *aliases, SDL_Scancode code) {
+static bool
+codeInAliases(const Bindings *bindings, Container *aliases, SDL_Scancode code) {
   if (aliases == nullptr) {
     return false;
   }
@@ -239,11 +240,11 @@ void Bindings_AddAlias(Bindings *bindings, Action action, Action alias) {
   }
 }
 
-bool Bindings_Has(Bindings *bindings, Action action) {
+bool Bindings_Has(const Bindings *bindings, Action action) {
   return hasAssociation(bindings, action) || hasAlias(bindings, action);
 }
 
-void Bindings_Get(Bindings *bindings,
+void Bindings_Get(const Bindings *bindings,
                   Action action,
                   SDL_Scancode **scancodes,
                   unsigned int *length) {
@@ -256,7 +257,7 @@ void Bindings_Get(Bindings *bindings,
   containerToArray(assoc, scancodes, length);
 }
 
-bool Bindings_Matches(Bindings *bindings,
+bool Bindings_Matches(const Bindings *bindings,
                       Action action,
                       SDL_Scancode scancode) {
   Container *assoc = g_hash_table_lookup(bindings->associations, &action);

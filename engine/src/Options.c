@@ -106,11 +106,11 @@ void Options_SetNoCopy(Options *options, OptionName name, void *value) {
       options->associations, makeOptionPointer(name), valueDestroy);
 }
 
-bool Options_Has(Options *options, OptionName name) {
+bool Options_Has(const Options *options, OptionName name) {
   return g_hash_table_lookup(options->associations, &name) != nullptr;
 }
 
-void *Options_Get(Options *options, OptionName name) {
+void *Options_Get(const Options *options, OptionName name) {
   ValueDestroy *value = g_hash_table_lookup(options->associations, &name);
   if (value == nullptr) {
     return nullptr;
