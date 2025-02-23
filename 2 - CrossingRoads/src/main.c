@@ -71,6 +71,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int, char **) {
 
   AppState *state = SDL_malloc(sizeof(AppState));
   state->lastFrameEndNS = 0;
+  state->fps = 0;
+  state->frameTime = 0;
   setTargetTick(state, 60);
   *appstate = state;
 
@@ -181,5 +183,6 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 void SDL_AppQuit(void *appstate, SDL_AppResult) {
   AppState *state = appstate;
   StateManager_Free(state->stateManager);
+  Options_Free(state->options);
   SDL_free(state);
 }

@@ -32,6 +32,8 @@ static void init(void **m, StateManager *) {
 }
 
 static void destroy(void *m) {
+  Memory *memory = m;
+  freeEntity(memory->player);
   SDL_free(m);
 }
 
