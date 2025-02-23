@@ -2,15 +2,18 @@ set(SOURCE_LIST
     "src/main.c"
     "src/states/startState.c"
     "src/states/optionsState.c"
+    "src/states/gameState.c"
+    "src/entities/entities.c"
+    "src/entities/player.c"
 )
 
 add_executable(CrossingRoads EXCLUDE_FROM_ALL ${SOURCE_LIST})
 
-set_property(TARGET CrossingRoads PROPERTY C_STANDARD 23)
+set_target_properties(CrossingRoads PROPERTIES C_STANDARD 23)
 if (MSVC)
-  target_compile_options(Engine PRIVATE /W4 /WERROR)
+  target_compile_options(CrossingRoads PRIVATE /W4 /WERROR)
 else()
-  target_compile_options(Engine PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  target_compile_options(CrossingRoads PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()
 
 target_include_directories(CrossingRoads PRIVATE include)

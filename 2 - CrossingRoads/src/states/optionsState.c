@@ -18,7 +18,6 @@
 #include "Engine/Bindings.h"
 #include "Engine/StateManager.h"
 #include "SDL3/SDL.h"
-#include "SDL3/SDL_video.h"
 #include "SDL3_ttf/SDL_ttf.h"
 #include "States.h"
 
@@ -66,7 +65,7 @@ static void onApply(Memory *memory, StateManager *manager) {
       manager->mainWindow, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 }
 
-static void onExit(Memory *memory, StateManager *manager) {
+static void onExit(Memory *, StateManager *manager) {
   StateManager_Pop(manager);
 }
 

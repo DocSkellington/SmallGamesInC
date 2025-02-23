@@ -14,9 +14,25 @@
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-#pragma once
-#include "Engine/StateManager.h"
 
-State *createStartState();
-State *createOptionsState();
-State *createGameState();
+#include "Entities.h"
+
+void freeEntity(Entity *entity) {
+  if (entity->cleanup != nullptr) {
+    entity->cleanup(entity);
+  }
+  SDL_free(entity);
+}
+
+void renderEntity(const Entity *entity, SDL_Renderer *renderer) {
+  if (entity != nullptr && entity->render != nullptr) {
+    entity->render(entity, renderer);
+  }
+}
+
+void updateEntity(Entity *entity, Uint64 deltaMS) {
+  if (entity != nullptr && entity->update != nullptr) {
+    entity->update(entity, deltaMS);
+  }
+}
+

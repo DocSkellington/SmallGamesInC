@@ -29,20 +29,21 @@ struct Memory {
 
   struct {
     SDL_Texture **textures;
-    void (**callbacks)(Memory *, StateManager *);
+    void (**callbacks)(StateManager *);
     unsigned int size;
   } texts;
 };
 
-static void onStart(Memory *memory, StateManager *manager) {
-  SDL_Log("Start not implemented");
+static void onStart(StateManager *manager) {
+  StateManager_Pop(manager);
+  StateManager_Push(manager, createGameState());
 }
 
-static void onOptions(Memory *memory, StateManager *manager) {
+static void onOptions(StateManager *manager) {
   StateManager_Push(manager, createOptionsState());
 }
 
-static void onExit(Memory *memory, StateManager *manager) {
+static void onExit(StateManager *) {
   SDL_Event quitEvent;
   SDL_zero(quitEvent);
   quitEvent.type = SDL_EVENT_QUIT;
@@ -142,7 +143,7 @@ processEvent(void *memory, SDL_Event *event, StateManager *manager) {
     } else if (Bindings_Matches(
                    bindings, ACTION_MENU_OK, event->key.scancode)) {
       if (m->texts.callbacks[m->selection] != nullptr) {
-        m->texts.callbacks[m->selection](m, manager);
+        m->texts.callbacks[m->selection](manager);
       }
     }
   }

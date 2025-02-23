@@ -50,7 +50,7 @@ void setTargetTick(AppState *state, Uint64 FPS) {
   state->targetTickTimeNS = SDL_NS_PER_SECOND * 1. / FPS;
 }
 
-SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
+SDL_AppResult SDL_AppInit(void **appstate, int, char **) {
   SDL_SetAppMetadata("Crossing Roads", "1.0", "com.gaetanstaquet.crossing");
 
   srand(time(NULL));
@@ -178,7 +178,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
   return SDL_APP_CONTINUE;
 }
 
-void SDL_AppQuit(void *appstate, SDL_AppResult result) {
+void SDL_AppQuit(void *appstate, SDL_AppResult) {
   AppState *state = appstate;
   StateManager_Free(state->stateManager);
   SDL_free(state);
