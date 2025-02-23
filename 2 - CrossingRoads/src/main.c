@@ -21,6 +21,7 @@
 #include "SDL3/SDL_init.h"
 #include "SDL3/SDL_log.h"
 #include "SDL3/SDL_render.h"
+#include "SDL3/SDL_scancode.h"
 #define SDL_MAIN_USE_CALLBACKS 1
 
 #include "Engine/StateManager.h"
@@ -100,6 +101,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int, char **) {
   Bindings_Add(bindings, ACTION_MENU_OK, SDL_SCANCODE_SPACE);
   Bindings_Add(bindings, ACTION_MENU_OK, SDL_SCANCODE_RETURN);
   Bindings_Add(bindings, ACTION_MENU_OK, SDL_SCANCODE_KP_ENTER);
+
+  Bindings_Add(bindings, ACTION_MENU_BACK, SDL_SCANCODE_ESCAPE);
 
   state->window = SDL_CreateWindow(
       "Crossing Roads", windowSize.first, windowSize.second, SDL_WINDOW_OPENGL);

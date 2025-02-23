@@ -75,22 +75,26 @@ static void update(Entity *entity, Uint64 deltaMS) {
   }
 }
 
-static void render(const Entity *entity, SDL_Renderer *renderer) {
+static void
+render(const Entity *entity, SDL_Renderer *renderer, Position shift) {
   const Memory *memory = entity->memory;
 
   Position pos = entity->position;
-  SDL_FRect rect = {.x = pos.x, .y = pos.y, .w = CELL_WIDTH, .h = CELL_HEIGHT};
+  SDL_FRect rect = {.x = pos.x + shift.x,
+                    .y = pos.y + shift.y,
+                    .w = CELL_WIDTH,
+                    .h = CELL_HEIGHT};
 
   SDL_Color color = memory->palette->colors[memory->animation.type];
   SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
   SDL_RenderFillRect(renderer, &rect);
 }
 
-Entity *createPlayerEntity() {
+Entity *createPlayerEntity(Level *level, Position start) {
   Entity *entity = SDL_malloc(sizeof(Entity));
   entity->memory = SDL_malloc(sizeof(Memory));
-  entity->position.x = 200;
-  entity->position.y = 50;
+  entity->level = level;
+  entity->position = start;
   entity->cleanup = cleanup;
   entity->render = render;
   entity->update = update;

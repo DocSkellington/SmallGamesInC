@@ -17,23 +17,24 @@
 #pragma once
 
 #include "Direction.h"
-#include "Level.h"
 #include "SDL3/SDL.h"
 
-typedef struct Entity Entity;
+#define CELL_WIDTH 20
+#define CELL_HEIGHT 20
 
-struct Entity {
-  void *memory;
-  Level *level;
-  Position position;
-  void (*cleanup)(Entity *entity);
-  void (*render)(const Entity *entity, SDL_Renderer *renderer, Position shift);
-  void (*update)(Entity *entity, Uint64 deltaMS);
-};
+typedef struct {
+  float x, y;
+} Position;
 
-void freeEntity(Entity *entity);
-void renderEntity(const Entity *entity, SDL_Renderer *renderer, Position shift);
-void updateEntity(Entity *entity, Uint64 deltaMS);
+typedef struct Level Level;
 
-Entity *createPlayerEntity(Level *level, Position start);
-void Player_move(Entity *entity, Direction direction);
+Level *createLevel(unsigned int speed, unsigned int carLanes, unsigned int riverLanes, bool safeZones, SDL_Rect *windowSize);
+void freeLevel(Level *level);
+void updateLevel(Level *level, Uint64 deltaMS);
+void renderLevel(const Level *level, SDL_Renderer *renderer);
+void moveEventLevel(Level *level, Direction direction);
+
+unsigned int getLevelWidth(Level *level);
+unsigned int getLevelHeight(Level *level);
+void getLevelBoundary(Level *level, SDL_Rect *boundary);
+bool isOutOfBounds(Level *level, Position position);

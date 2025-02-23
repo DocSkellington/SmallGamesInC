@@ -24,9 +24,9 @@ void freeEntity(Entity *entity) {
   SDL_free(entity);
 }
 
-void renderEntity(const Entity *entity, SDL_Renderer *renderer) {
+void renderEntity(const Entity *entity, SDL_Renderer *renderer, Position shift) {
   if (entity != nullptr && entity->render != nullptr) {
-    entity->render(entity, renderer);
+    entity->render(entity, renderer, shift);
   }
 }
 
