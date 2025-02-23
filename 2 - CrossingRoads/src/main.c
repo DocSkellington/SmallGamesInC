@@ -22,6 +22,7 @@
 #include "SDL3/SDL_log.h"
 #include "SDL3/SDL_render.h"
 #include "SDL3/SDL_scancode.h"
+#include "SDL3/SDL_video.h"
 #define SDL_MAIN_USE_CALLBACKS 1
 
 #include "Engine/StateManager.h"
@@ -38,8 +39,9 @@ typedef struct {
   SDL_Window *window;
   SDL_Renderer *renderer;
 
+  Uint64 lastFrameStartNS;
   Uint64 lastFrameEndNS;
-  double targetTickTimeNS;
+  Uint64 targetTickTimeNS;
   double fps;
   double frameTime;
 
@@ -48,7 +50,7 @@ typedef struct {
 } AppState;
 
 void setTargetTick(AppState *state, Uint64 FPS) {
-  state->targetTickTimeNS = SDL_NS_PER_SECOND * 1. / FPS;
+  state->targetTickTimeNS = (long double) SDL_NS_PER_SECOND / (FPS);
 }
 
 SDL_AppResult SDL_AppInit(void **appstate, int, char **) {
@@ -71,6 +73,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int, char **) {
   }
 
   AppState *state = SDL_malloc(sizeof(AppState));
+  state->lastFrameStartNS = 0;
   state->lastFrameEndNS = 0;
   state->fps = 0;
   state->frameTime = 0;
@@ -112,6 +115,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int, char **) {
                     SDL_GetError());
     return SDL_APP_FAILURE;
   }
+  SDL_SetWindowSurfaceVSync(state->window, 1);
 
   state->renderer = SDL_CreateRenderer(state->window, "vulkan,opengl");
   if (state->renderer == nullptr) {
@@ -155,11 +159,10 @@ void physicsStep(AppState *state, Uint64 deltaNS) {
 
 SDL_AppResult SDL_AppIterate(void *appstate) {
   AppState *state = appstate;
-
   auto startFrame = SDL_GetTicksNS();
-  auto deltaNS = startFrame - state->lastFrameEndNS;
 
-  if (deltaNS >= state->targetTickTimeNS) {
+  if (startFrame - state->lastFrameStartNS >= state->targetTickTimeNS) {
+    auto deltaNS = startFrame - state->lastFrameEndNS;
     physicsStep(state, deltaNS);
     drawApp(state);
 
@@ -169,6 +172,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     state->fps = (SDL_NS_PER_SECOND * 1. / elapsedSinceLast);
     state->frameTime = frameTime * 1. / SDL_NS_PER_MS;
     state->lastFrameEndNS = endFrame;
+    state->lastFrameStartNS = startFrame;
   }
 
   return SDL_APP_CONTINUE;
