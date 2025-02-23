@@ -27,13 +27,13 @@ struct Entity {
   Level *level;
   Position position;
   void (*cleanup)(Entity *entity);
-  void (*render)(const Entity *entity, SDL_Renderer *renderer, Position shift);
+  SDL_Texture* (*render)(const Entity *entity);
   void (*update)(Entity *entity, Uint64 deltaMS);
 };
 
 void freeEntity(Entity *entity);
-void renderEntity(const Entity *entity, SDL_Renderer *renderer, Position shift);
+SDL_Texture* renderEntity(const Entity *entity);
 void updateEntity(Entity *entity, Uint64 deltaMS);
 
-Entity *createPlayerEntity(Level *level, Position start);
+Entity *createPlayerEntity(Level *level, Position start, SDL_Renderer *renderer);
 void Player_move(Entity *entity, Direction direction);

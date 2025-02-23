@@ -16,12 +16,13 @@
 */
 
 #include "Entities.h"
-#include "SDL3/SDL_pixels.h"
+#include "Level.h"
 #include <assert.h>
+#include <math.h>
 
 #define ANIMATION_LENGTH 250
-#define MOVEMENT_SPEED_X (CELL_WIDTH * 1. / ANIMATION_LENGTH)
-#define MOVEMENT_SPEED_Y (CELL_HEIGHT * 1. / ANIMATION_LENGTH)
+#define MOVEMENT_SPEED_X (1. / ANIMATION_LENGTH)
+#define MOVEMENT_SPEED_Y (1. / ANIMATION_LENGTH)
 
 typedef enum {
   IDLE = 0,
@@ -39,11 +40,13 @@ typedef struct {
 typedef struct {
   Animation animation;
   SDL_Palette *palette;
+  SDL_Texture *texture;
 } Memory;
 
 static void cleanup(Entity *entity) {
   Memory *memory = entity->memory;
   SDL_DestroyPalette(memory->palette);
+  SDL_DestroyTexture(memory->texture);
   SDL_free(memory);
 }
 
@@ -51,6 +54,8 @@ static void update(Entity *entity, Uint64 deltaMS) {
   Memory *memory = entity->memory;
 
   if (memory->animation.duration >= ANIMATION_LENGTH) {
+    entity->position.x = round(entity->position.x);
+    entity->position.y = round(entity->position.y);
     memory->animation.type = IDLE;
     memory->animation.duration = 0;
   } else {
@@ -75,22 +80,27 @@ static void update(Entity *entity, Uint64 deltaMS) {
   }
 }
 
-static void
-render(const Entity *entity, SDL_Renderer *renderer, Position shift) {
+static SDL_Texture *render(const Entity *entity) {
   const Memory *memory = entity->memory;
-
-  Position pos = entity->position;
-  SDL_FRect rect = {.x = pos.x + shift.x,
-                    .y = pos.y + shift.y,
-                    .w = CELL_WIDTH,
-                    .h = CELL_HEIGHT};
-
   SDL_Color color = memory->palette->colors[memory->animation.type];
-  SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-  SDL_RenderFillRect(renderer, &rect);
+  SDL_Surface *surface = nullptr;
+
+  if (SDL_LockTextureToSurface(memory->texture, nullptr, &surface)) {
+    const SDL_PixelFormatDetails *formatDetails =
+        SDL_GetPixelFormatDetails(surface->format);
+
+    SDL_FillSurfaceRect(surface, nullptr, SDL_MapRGB(formatDetails, nullptr, 0, 0, 0));
+
+    SDL_FillSurfaceRect(surface, nullptr,
+      SDL_MapRGBA(formatDetails, nullptr, color.r, color.g, color.b, color.a));
+
+    SDL_UnlockTexture(memory->texture);
+  }
+
+  return memory->texture;
 }
 
-Entity *createPlayerEntity(Level *level, Position start) {
+Entity *createPlayerEntity(Level *level, Position start, SDL_Renderer *renderer) {
   Entity *entity = SDL_malloc(sizeof(Entity));
   entity->memory = SDL_malloc(sizeof(Memory));
   entity->level = level;
@@ -103,6 +113,7 @@ Entity *createPlayerEntity(Level *level, Position start) {
   memory->animation.type = IDLE;
   memory->animation.duration = 0;
   memory->palette = SDL_CreatePalette(5);
+  memory->texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, CELL_WIDTH, CELL_HEIGHT);
 
   SDL_Color colors[5];
   colors[IDLE].r = 255;
@@ -137,18 +148,29 @@ void Player_move(Entity *entity, Direction direction) {
     return;
   }
 
+  unsigned int width = getLevelWidth(entity->level);
+  unsigned int height = getLevelHeight(entity->level);
+
   switch (direction) {
   case UP:
-    memory->animation.type = MOVING_UP;
+    if (entity->position.y > 0) {
+      memory->animation.type = MOVING_UP;
+    }
     break;
   case DOWN:
-    memory->animation.type = MOVING_DOWN;
+    if (entity->position.y + 1 < height) {
+      memory->animation.type = MOVING_DOWN;
+    }
     break;
   case LEFT:
-    memory->animation.type = MOVING_LEFT;
+    if (entity->position.x > 0) {
+      memory->animation.type = MOVING_LEFT;
+    }
     break;
   case RIGHT:
-    memory->animation.type = MOVING_RIGHT;
+    if (entity->position.x + 1 < width) {
+      memory->animation.type = MOVING_RIGHT;
+    }
     break;
   }
   memory->animation.duration = 0;

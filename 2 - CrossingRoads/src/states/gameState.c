@@ -31,7 +31,7 @@ static void init(void **m, StateManager *manager) {
   Memory *memory = SDL_malloc(sizeof(Memory));
   SDL_Rect windowSize = {.x = 0, .y = 0, .w = 0, .h = 0};
   SDL_GetWindowSize(manager->mainWindow, &(windowSize.w), &(windowSize.h));
-  memory->level = createLevel(1, 3, 5, true, &windowSize);
+  memory->level = createLevel(1, 3, 5, true, &windowSize, SDL_GetRenderer(manager->mainWindow));
   *m = memory;
 }
 

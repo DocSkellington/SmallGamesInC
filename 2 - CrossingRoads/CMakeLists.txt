@@ -20,6 +20,7 @@ endif()
 target_include_directories(CrossingRoads PRIVATE include)
 target_link_libraries(CrossingRoads PRIVATE Engine)
 target_link_libraries(CrossingRoads PRIVATE SDL3_ttf::SDL3_ttf SDL3::SDL3)
+target_link_libraries(CrossingRoads PRIVATE m)
 
 add_custom_target(RunCrossingRoads
   COMMAND CrossingRoads

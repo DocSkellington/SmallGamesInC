@@ -19,16 +19,16 @@
 #include "Direction.h"
 #include "SDL3/SDL.h"
 
-#define CELL_WIDTH 20
-#define CELL_HEIGHT 20
+#define CELL_WIDTH 32
+#define CELL_HEIGHT 32
 
 typedef struct {
-  float x, y;
+  double x, y;
 } Position;
 
 typedef struct Level Level;
 
-Level *createLevel(unsigned int speed, unsigned int carLanes, unsigned int riverLanes, bool safeZones, SDL_Rect *windowSize);
+Level *createLevel(unsigned int speed, unsigned int carLanes, unsigned int riverLanes, bool safeZones, SDL_Rect *windowSize, SDL_Renderer *renderer);
 void freeLevel(Level *level);
 void updateLevel(Level *level, Uint64 deltaMS);
 void renderLevel(const Level *level, SDL_Renderer *renderer);

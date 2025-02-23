@@ -17,8 +17,7 @@
 
 #include "Level.h"
 #include "Entities.h"
-#include "SDL3/SDL_pixels.h"
-#include "SDL3/SDL_render.h"
+#include <math.h>
 
 #define COLUMNS 14
 
@@ -32,20 +31,26 @@ struct Level {
   SDL_Rect windowSize;
 };
 
-Level *createLevel(unsigned int speed, unsigned int carLanes, unsigned int riverLanes, bool safeZones, SDL_Rect *windowSize) {
+static void gridToGlobalPosition(const Level *level, const Position *grid, float *x, float *y) {
+  *x = grid->x * CELL_WIDTH + level->boundaries.x;
+  *y = grid->y * CELL_HEIGHT + level->boundaries.y;
+}
+
+Level *createLevel(unsigned int speed, unsigned int carLanes, unsigned int riverLanes, bool safeZones, SDL_Rect *windowSize, SDL_Renderer *renderer) {
   Level *level = SDL_malloc(sizeof(Level));
   level->speed = speed;
-  // TODO
   level->carLanes = carLanes;
   level->riverLanes = riverLanes;
   level->safeZones = safeZones;
+  unsigned int nLines = getLevelHeight(level);
+
   level->boundaries.w = COLUMNS * CELL_WIDTH;
-  level->boundaries.h = (carLanes + riverLanes + 3) * CELL_HEIGHT;
+  level->boundaries.h = nLines * CELL_HEIGHT;
   level->boundaries.x = (windowSize->w - level->boundaries.w) / 2.;
   level->boundaries.y = (windowSize->h - level->boundaries.h) / 2.;
 
-  Position start = {.x = level->boundaries.w / 2., .y = level->boundaries.h};
-  level->player = createPlayerEntity(level, start);
+  Position start = {.x = round(COLUMNS / 2.), .y = nLines - 1};
+  level->player = createPlayerEntity(level, start, renderer);
   level->windowSize = *windowSize;
   return level;
 }
@@ -60,21 +65,50 @@ void updateLevel(Level *level, Uint64 deltaMS) {
 }
 
 static void renderAroundBoundary(const Level *level, SDL_Renderer *renderer) {
-  SDL_SetRenderDrawColor(renderer, 0, 255, 0, SDL_ALPHA_OPAQUE);
+  SDL_SetRenderDrawColor(renderer, 120, 10, 10, SDL_ALPHA_OPAQUE);
   SDL_FRect rect = {.x = 0, .y = 0, .w = level->boundaries.x, .h = level->windowSize.h};
   SDL_RenderFillRect(renderer, &rect);
 
   rect.x = level->boundaries.x + level->boundaries.w;
+  SDL_RenderFillRect(renderer, &rect);
+
+  rect.x = level->boundaries.x;
+  rect.y = 0;
+  rect.w = level->boundaries.w;
+  rect.h = level->boundaries.y;
+  SDL_RenderFillRect(renderer, &rect);
+
+  rect.x = level->boundaries.x;
+  rect.y = level->boundaries.y + level->boundaries.h;
+  rect.w = level->boundaries.w;
+  rect.h = level->boundaries.y;
   SDL_RenderFillRect(renderer, &rect);
 }
 
 void renderLevel(const Level *level, SDL_Renderer *renderer) {
   renderAroundBoundary(level, renderer);
 
-  Position shift = {.x = level->boundaries.x, .y = level->boundaries.y};
-  renderEntity(level->player, renderer, shift);
+  Entity *entity = level->player;
+  SDL_Texture *texture = renderEntity(entity);
+
+  SDL_FRect dstrect = {.x = 0, .y = 0, .w = CELL_WIDTH, .h = CELL_HEIGHT};
+  gridToGlobalPosition(level, &entity->position, &dstrect.x, &dstrect.y);
+
+  SDL_Rect temp;
+  SDL_GetRenderClipRect(renderer, &temp);
+  SDL_SetRenderClipRect(renderer, nullptr);
+  SDL_SetRenderViewport(renderer, nullptr);
+  SDL_RenderTexture(renderer, texture, nullptr, &dstrect);
 }
 
 void moveEventLevel(Level *level, Direction direction) {
   Player_move(level->player, direction);
+}
+
+unsigned int getLevelWidth(Level *) {
+  return COLUMNS;
+}
+
+unsigned int getLevelHeight(Level *level) {
+  return level->carLanes + level->riverLanes + 3;
 }
