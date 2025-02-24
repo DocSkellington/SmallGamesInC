@@ -18,6 +18,7 @@
 #include "Level.h"
 #include "Entities.h"
 #include "SDL3/SDL_pixels.h"
+#include "SDL3/SDL_rect.h"
 #include "SDL3/SDL_stdinc.h"
 #include <math.h>
 
@@ -25,6 +26,8 @@
 #define MAX_CARS_PER_LANE 5
 #define MAX_TURTLES_PER_LANE 5
 #define MAX_LOGS_PER_LANE 5
+#define ENTITY_MARGIN_X (2. / CELL_WIDTH)
+#define ENTITY_MARGIN_Y (2. / CELL_HEIGHT)
 
 enum InPalette {
   OUTSIDE = 0,
@@ -66,21 +69,21 @@ static void createObstacles(Level *level, SDL_Renderer *renderer) {
   unsigned int nCars = MAX_CARS_PER_LANE * level->carLanes;
   level->cars.size = nCars;
   level->cars.obstacles = SDL_malloc(nCars * sizeof(Entity *));
-  for (unsigned int i = 0 ; i < nCars ; i++) {
+  for (unsigned int i = 0; i < nCars; i++) {
     level->cars.obstacles[i] = nullptr;
   }
 
   unsigned int nTurtles = MAX_TURTLES_PER_LANE * level->riverLanes;
   level->turtles.size = nTurtles;
   level->turtles.obstacles = SDL_malloc(nTurtles * sizeof(Entity *));
-  for (unsigned int i = 0 ; i < nTurtles ; i++) {
+  for (unsigned int i = 0; i < nTurtles; i++) {
     level->turtles.obstacles[i] = nullptr;
   }
 
   unsigned int nLogs = MAX_LOGS_PER_LANE * level->riverLanes;
   level->logs.size = nLogs;
   level->logs.obstacles = SDL_malloc(nLogs * sizeof(Entity *));
-  for (unsigned int i = 0 ; i < nLogs ; i++) {
+  for (unsigned int i = 0; i < nLogs; i++) {
     level->logs.obstacles[i] = nullptr;
   }
 
@@ -100,9 +103,9 @@ static void createObstacles(Level *level, SDL_Renderer *renderer) {
     }
 
     for (unsigned int car = 0; car < 4 - (2 * (lane % 2)); car++) {
-      Position start = {
-          .x = (size + gap) * car + (lane % 3),
-          .y = 1 + level->riverLanes + 1 + level->carLanes - lane - 1};
+      Position start = {.x = (size + gap) * car + (lane % 3),
+                        .y = 1 + level->riverLanes + 1 + level->carLanes -
+                             lane - 1};
       level->cars.obstacles[MAX_CARS_PER_LANE * lane + car] =
           createCarEntity(level, start, direction, size, speed, renderer);
     }
@@ -125,9 +128,8 @@ static void createObstacles(Level *level, SDL_Renderer *renderer) {
       }
 
       for (unsigned int turtle = 0; turtle < 3; turtle++) {
-        Position start = {
-            .x = (size + gap) * turtle + 2 * (lane % 4),
-            .y = 1 + level->riverLanes - lane - 1};
+        Position start = {.x = (size + gap) * turtle + 2 * (lane % 4),
+                          .y = 1 + level->riverLanes - lane - 1};
         level->turtles.obstacles[MAX_TURTLES_PER_LANE * lane + turtle] =
             createTurtleEntity(level, start, direction, size, speed, renderer);
       }
@@ -144,9 +146,8 @@ static void createObstacles(Level *level, SDL_Renderer *renderer) {
       }
 
       for (unsigned int log = 0; log < 3; log++) {
-        Position start = {
-            .x = (size + gap) * log + (lane % 4),
-            .y = 1 + level->riverLanes - lane - 1};
+        Position start = {.x = (size + gap) * log + (lane % 4),
+                          .y = 1 + level->riverLanes - lane - 1};
         level->logs.obstacles[MAX_LOGS_PER_LANE * lane + log] =
             createLogEntity(level, start, direction, size, speed, renderer);
       }
@@ -234,19 +235,48 @@ void freeLevel(Level *level) {
   SDL_free(level);
 }
 
-static void updateObstacles(Level *level, Uint64 deltaMS, Obstacles *obstacles) {
-  for (unsigned int i = 0 ; i < obstacles->size ; i++) {
+static void
+updateObstacles(Level *level, Uint64 deltaMS, Obstacles *obstacles) {
+  for (unsigned int i = 0; i < obstacles->size; i++) {
     if (obstacles->obstacles[i] != nullptr) {
       updateEntity(obstacles->obstacles[i], deltaMS, level);
     }
   }
 }
 
-void updateLevel(Level *level, Uint64 deltaMS) {
+static bool isHitByCar(Level *level) {
+  Entity *player = level->player;
+  for (unsigned int i = 0; i < level->cars.size; i++) {
+    Entity *car = level->cars.obstacles[i];
+    if (car != nullptr) {
+      SDL_FRect playerRect = {.x = player->position.x + ENTITY_MARGIN_X,
+                              .y = player->position.y + ENTITY_MARGIN_Y,
+                              .w = player->size.x - ENTITY_MARGIN_X,
+                              .h = player->size.y - ENTITY_MARGIN_Y};
+      SDL_FRect carRect = {.x = car->position.x + ENTITY_MARGIN_X,
+                           .y = car->position.y + ENTITY_MARGIN_Y,
+                           .w = car->size.x - ENTITY_MARGIN_X,
+                           .h = car->size.y - ENTITY_MARGIN_Y};
+      SDL_FRect intersection;
+      if (SDL_GetRectIntersectionFloat(&playerRect, &carRect, &intersection)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+bool updateLevel(Level *level, Uint64 deltaMS) {
   updateObstacles(level, deltaMS, &level->cars);
   updateObstacles(level, deltaMS, &level->turtles);
   updateObstacles(level, deltaMS, &level->logs);
   updateEntity(level->player, deltaMS, level);
+
+  if (isHitByCar(level)) {
+    return true;
+  }
+
+  return false;
 }
 
 inline static void renderOutside(const Level *level, SDL_Renderer *renderer) {
@@ -324,16 +354,23 @@ inline static void renderRiverLanes(const Level *level,
   SDL_RenderFillRect(renderer, &rect);
 }
 
-static void renderOneEntity(const Level *level, const Entity *entity, SDL_Renderer *renderer) {
+static void renderOneEntity(const Level *level,
+                            const Entity *entity,
+                            SDL_Renderer *renderer) {
   SDL_Texture *texture = renderEntity(entity, level);
-  SDL_FRect dstrect = {.x = 0, .y = 0, .w = entity->size.x * CELL_WIDTH, .h = entity->size.y * CELL_HEIGHT};
+  SDL_FRect dstrect = {.x = 0,
+                       .y = 0,
+                       .w = entity->size.x * CELL_WIDTH,
+                       .h = entity->size.y * CELL_HEIGHT};
   gridToGlobalPosition(level, &entity->position, &dstrect.x, &dstrect.y);
 
   SDL_RenderTexture(renderer, texture, nullptr, &dstrect);
 }
 
-static void renderObstacles(const Level *level, const Obstacles *obstacles, SDL_Renderer *renderer) {
-  for (unsigned int i = 0 ; i < obstacles->size ; i++) {
+static void renderObstacles(const Level *level,
+                            const Obstacles *obstacles,
+                            SDL_Renderer *renderer) {
+  for (unsigned int i = 0; i < obstacles->size; i++) {
     if (obstacles->obstacles[i] != nullptr) {
       renderOneEntity(level, obstacles->obstacles[i], renderer);
     }
@@ -352,7 +389,7 @@ void renderLevel(const Level *level, SDL_Renderer *renderer) {
   renderObstacles(level, &level->logs, renderer);
   renderOneEntity(level, level->player, renderer);
   renderObstacles(level, &level->cars, renderer);
-  
+
   // The outside is drawn last to hide the obstacles that go offscreen.
   renderOutside(level, renderer);
 }

@@ -28,9 +28,14 @@ typedef struct {
 
 typedef struct Level Level;
 
-Level *createLevel(unsigned int speed, unsigned int carLanes, unsigned int riverLanes, bool safeZones, SDL_Rect *windowSize, SDL_Renderer *renderer);
+Level *createLevel(unsigned int speed,
+                   unsigned int carLanes,
+                   unsigned int riverLanes,
+                   bool safeZones,
+                   SDL_Rect *windowSize,
+                   SDL_Renderer *renderer);
 void freeLevel(Level *level);
-void updateLevel(Level *level, Uint64 deltaMS);
+bool updateLevel(Level *level, Uint64 deltaMS);
 void renderLevel(const Level *level, SDL_Renderer *renderer);
 void moveEventLevel(Level *level, Direction direction);
 

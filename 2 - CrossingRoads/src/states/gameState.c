@@ -15,23 +15,26 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include "Direction.h"
 #include "Engine/Bindings.h"
 #include "Engine/Options.h"
 #include "Engine/StateManager.h"
-#include "Direction.h"
 #include "Level.h"
 #include "SDL3/SDL_video.h"
 #include "States.h"
 
 typedef struct {
   Level *level;
+  bool lost;
 } Memory;
 
 static void init(void **m, StateManager *manager) {
   Memory *memory = SDL_malloc(sizeof(Memory));
   SDL_Rect windowSize = {.x = 0, .y = 0, .w = 0, .h = 0};
   SDL_GetWindowSize(manager->mainWindow, &(windowSize.w), &(windowSize.h));
-  memory->level = createLevel(1, 3, 5, true, &windowSize, SDL_GetRenderer(manager->mainWindow));
+  memory->level = createLevel(
+      1, 3, 5, true, &windowSize, SDL_GetRenderer(manager->mainWindow));
+  memory->lost = false;
   *m = memory;
 }
 
@@ -41,9 +44,19 @@ static void destroy(void *m) {
   SDL_free(m);
 }
 
-static bool update(void *m, Uint64 deltaMS, StateManager *) {
+static bool update(void *m, Uint64 deltaMS, StateManager *manager) {
   Memory *memory = m;
-  updateLevel(memory->level, deltaMS);
+  if (memory->lost) {
+    freeLevel(memory->level);
+    SDL_Rect windowSize = {.x = 0, .y = 0, .w = 0, .h = 0};
+    SDL_GetWindowSize(manager->mainWindow, &(windowSize.w), &(windowSize.h));
+    memory->level = createLevel(
+        1, 3, 5, true, &windowSize, SDL_GetRenderer(manager->mainWindow));
+    memory->lost = false;
+  } else if (updateLevel(memory->level, deltaMS)) {
+    memory->lost = true;
+    StateManager_Push(manager, createGameOverState());
+  }
   return false;
 }
 
@@ -67,8 +80,8 @@ static bool processEvent(void *m, SDL_Event *event, StateManager *manager) {
     } else if (Bindings_Matches(
                    bindings, ACTION_MOVE_RIGHT, event->key.scancode)) {
       moveEventLevel(memory->level, RIGHT);
-    }
-    else if (Bindings_Matches(bindings, ACTION_MENU_BACK, event->key.scancode)) {
+    } else if (Bindings_Matches(
+                   bindings, ACTION_MENU_BACK, event->key.scancode)) {
       StateManager_Pop(manager);
       StateManager_Push(manager, createStartState());
     }
