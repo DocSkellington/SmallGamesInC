@@ -6,6 +6,7 @@ set(SOURCE_LIST
     "src/Level.c"
     "src/entities/entities.c"
     "src/entities/player.c"
+    "src/entities/obstacles.c"
 )
 
 add_executable(CrossingRoads EXCLUDE_FROM_ALL ${SOURCE_LIST})

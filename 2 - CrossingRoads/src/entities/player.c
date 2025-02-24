@@ -89,10 +89,14 @@ static SDL_Texture *render(const Entity *entity, const Level *) {
     const SDL_PixelFormatDetails *formatDetails =
         SDL_GetPixelFormatDetails(surface->format);
 
-    SDL_FillSurfaceRect(surface, nullptr, SDL_MapRGB(formatDetails, nullptr, 0, 0, 0));
+    SDL_FillSurfaceRect(
+        surface, nullptr, SDL_MapRGB(formatDetails, nullptr, 0, 0, 0));
 
-    SDL_FillSurfaceRect(surface, nullptr,
-      SDL_MapRGBA(formatDetails, nullptr, color.r, color.g, color.b, color.a));
+    SDL_FillSurfaceRect(
+        surface,
+        nullptr,
+        SDL_MapRGBA(
+            formatDetails, nullptr, color.r, color.g, color.b, color.a));
 
     SDL_UnlockTexture(memory->texture);
   }
@@ -104,6 +108,7 @@ Entity *createPlayerEntity(Level *, Position start, SDL_Renderer *renderer) {
   Entity *entity = SDL_malloc(sizeof(Entity));
   entity->memory = SDL_malloc(sizeof(Memory));
   entity->position = start;
+  entity->size.x = entity->size.y = 1;
   entity->cleanup = cleanup;
   entity->render = render;
   entity->update = update;
@@ -112,7 +117,11 @@ Entity *createPlayerEntity(Level *, Position start, SDL_Renderer *renderer) {
   memory->animation.type = IDLE;
   memory->animation.duration = 0;
   memory->palette = SDL_CreatePalette(5);
-  memory->texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, CELL_WIDTH, CELL_HEIGHT);
+  memory->texture = SDL_CreateTexture(renderer,
+                                      SDL_PIXELFORMAT_RGBA32,
+                                      SDL_TEXTUREACCESS_STREAMING,
+                                      CELL_WIDTH,
+                                      CELL_HEIGHT);
 
   SDL_Color colors[5];
   colors[IDLE].r = 255;

@@ -25,14 +25,37 @@ typedef struct Entity Entity;
 struct Entity {
   void *memory;
   Position position;
+  Position size;
   void (*cleanup)(Entity *entity);
-  SDL_Texture* (*render)(const Entity *entity, const Level *level);
+  SDL_Texture *(*render)(const Entity *entity, const Level *level);
   void (*update)(Entity *entity, Uint64 deltaMS, Level *level);
 };
 
 void freeEntity(Entity *entity);
-SDL_Texture* renderEntity(const Entity *entity, const Level *level);
+SDL_Texture *renderEntity(const Entity *entity, const Level *level);
 void updateEntity(Entity *entity, Uint64 deltaMS, Level *level);
 
-Entity *createPlayerEntity(Level *level, Position start, SDL_Renderer *renderer);
+Entity *
+createPlayerEntity(Level *level, Position start, SDL_Renderer *renderer);
 void Player_move(Entity *entity, Direction direction, Level *level);
+
+Entity *createCarEntity(Level *level,
+                        Position start,
+                        Direction direction,
+                        unsigned int size,
+                        double speed,
+                        SDL_Renderer *renderer);
+
+Entity *createTurtleEntity(Level *level,
+                           Position start,
+                           Direction direction,
+                           unsigned int size,
+                           double speed,
+                           SDL_Renderer *renderer);
+
+Entity *createLogEntity(Level *level,
+                        Position start,
+                        Direction direction,
+                        unsigned int size,
+                        double speed,
+                        SDL_Renderer *renderer);
