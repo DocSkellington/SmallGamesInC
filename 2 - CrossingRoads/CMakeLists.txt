@@ -3,6 +3,7 @@ set(SOURCE_LIST
     "src/states/startState.c"
     "src/states/optionsState.c"
     "src/states/gameState.c"
+    "src/states/gameOverState.c"
     "src/Level.c"
     "src/entities/entities.c"
     "src/entities/player.c"
