@@ -38,6 +38,7 @@ void updateEntity(Entity *entity, Uint64 deltaMS, Level *level);
 Entity *
 createPlayerEntity(Level *level, Position start, SDL_Renderer *renderer);
 void Player_move(Entity *entity, Direction direction, Level *level);
+bool isPlayerJumping(const Entity *entity);
 
 Entity *createCarEntity(Level *level,
                         Position start,
@@ -59,3 +60,5 @@ Entity *createLogEntity(Level *level,
                         unsigned int size,
                         double speed,
                         SDL_Renderer *renderer);
+
+void movePlayerWithObstacle(const Entity *obstacle, Entity *player, Uint64 deltaMS);

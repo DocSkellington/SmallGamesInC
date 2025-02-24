@@ -16,6 +16,7 @@
 */
 
 #include "Level.h"
+#include "Engine/Pair.h"
 #include "Entities.h"
 #include "SDL3/SDL_pixels.h"
 #include "SDL3/SDL_rect.h"
@@ -244,10 +245,10 @@ updateObstacles(Level *level, Uint64 deltaMS, Obstacles *obstacles) {
   }
 }
 
-static bool isHitByCar(Level *level) {
-  Entity *player = level->player;
+static bool isHitByCar(const Level *level) {
+  const Entity *player = level->player;
   for (unsigned int i = 0; i < level->cars.size; i++) {
-    Entity *car = level->cars.obstacles[i];
+    const Entity *car = level->cars.obstacles[i];
     if (car != nullptr) {
       SDL_FRect playerRect = {.x = player->position.x + ENTITY_MARGIN_X,
                               .y = player->position.y + ENTITY_MARGIN_Y,
@@ -266,13 +267,58 @@ static bool isHitByCar(Level *level) {
   return false;
 }
 
+static bool isInWaterOrMoveWithObstacle(Level *level, Uint64 deltaMS) {
+  Entity *player = level->player;
+  if (isPlayerJumping(player) || 1 > player->position.y || floor(player->position.y) >= level->riverLanes + 1) {
+    return false;
+  }
+
+  for (unsigned int i = 0; i < level->logs.size; i++) {
+    const Entity *log = level->logs.obstacles[i];
+    if (log != nullptr) {
+      SDL_FRect playerRect = {.x = player->position.x + ENTITY_MARGIN_X,
+                              .y = player->position.y + ENTITY_MARGIN_Y,
+                              .w = player->size.x - ENTITY_MARGIN_X,
+                              .h = player->size.y - ENTITY_MARGIN_Y};
+      SDL_FRect logRect = {.x = log->position.x + ENTITY_MARGIN_X,
+                           .y = log->position.y + ENTITY_MARGIN_Y,
+                           .w = log->size.x - ENTITY_MARGIN_X,
+                           .h = log->size.y - ENTITY_MARGIN_Y};
+      SDL_FRect intersection;
+      if (SDL_GetRectIntersectionFloat(&playerRect, &logRect, &intersection)) {
+        movePlayerWithObstacle(log, player, deltaMS);
+        return false;
+      }
+    }
+  }
+  for (unsigned int i = 0; i < level->turtles.size; i++) {
+    const Entity *turtle = level->turtles.obstacles[i];
+    if (turtle != nullptr) {
+      SDL_FRect playerRect = {.x = player->position.x + ENTITY_MARGIN_X,
+                              .y = player->position.y + ENTITY_MARGIN_Y,
+                              .w = player->size.x - ENTITY_MARGIN_X,
+                              .h = player->size.y - ENTITY_MARGIN_Y};
+      SDL_FRect turtleRect = {.x = turtle->position.x + ENTITY_MARGIN_X,
+                           .y = turtle->position.y + ENTITY_MARGIN_Y,
+                           .w = turtle->size.x - ENTITY_MARGIN_X,
+                           .h = turtle->size.y - ENTITY_MARGIN_Y};
+      SDL_FRect intersection;
+      if (SDL_GetRectIntersectionFloat(&playerRect, &turtleRect, &intersection)) {
+        movePlayerWithObstacle(turtle, player, deltaMS);
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 bool updateLevel(Level *level, Uint64 deltaMS) {
   updateObstacles(level, deltaMS, &level->cars);
   updateObstacles(level, deltaMS, &level->turtles);
   updateObstacles(level, deltaMS, &level->logs);
   updateEntity(level->player, deltaMS, level);
 
-  if (isHitByCar(level)) {
+  if (isHitByCar(level) || isInWaterOrMoveWithObstacle(level, deltaMS)) {
     return true;
   }
 

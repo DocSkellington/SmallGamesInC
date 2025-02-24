@@ -63,6 +63,7 @@ static void update(Entity *entity, Uint64 deltaMS, Level *) {
 
     switch (memory->animation.type) {
     case IDLE:
+      memory->animation.duration = 0;
       break;
     case MOVING_UP:
       entity->position.y -= deltaMS * MOVEMENT_SPEED_Y;
@@ -182,4 +183,9 @@ void Player_move(Entity *entity, Direction direction, Level *level) {
     break;
   }
   memory->animation.duration = 0;
+}
+
+bool isPlayerJumping(const Entity *entity) {
+  Memory *memory = entity->memory;
+  return memory->animation.type != IDLE;
 }

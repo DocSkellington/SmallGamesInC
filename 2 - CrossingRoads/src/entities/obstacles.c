@@ -15,6 +15,7 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include "Direction.h"
 #include "Entities.h"
 #include "Level.h"
 #include "SDL3/SDL_log.h"
@@ -52,14 +53,13 @@ static void warp(Entity *entity, const Level *level) {
   }
 }
 
-static void update(Entity *entity, Uint64 deltaMS, Level *level) {
-  Memory *memory = entity->memory;
-  switch (memory->direction) {
+static void move(Entity *entity, Direction direction, double distance) {
+  switch (direction) {
   case LEFT:
-    entity->position.x -= deltaMS * MOVEMENT_SPEED(memory->speed);
+    entity->position.x -= distance;
     break;
   case RIGHT:
-    entity->position.x += deltaMS * MOVEMENT_SPEED(memory->speed);
+    entity->position.x += distance;
     break;
   case UP:
   case DOWN:
@@ -67,6 +67,11 @@ static void update(Entity *entity, Uint64 deltaMS, Level *level) {
                  "Invalid direction for an obstacle");
     break;
   }
+}
+
+static void update(Entity *entity, Uint64 deltaMS, Level *level) {
+  Memory *memory = entity->memory;
+  move(entity, memory->direction, deltaMS * MOVEMENT_SPEED(memory->speed));
   warp(entity, level);
 }
 
@@ -153,4 +158,9 @@ Entity *createLogEntity(Level *level,
   SDL_Color color = {.r = 153, .g = 88, .b = 42, .a = SDL_ALPHA_OPAQUE};
   fillTexture(memory->texture, &color);
   return log;
+}
+
+void movePlayerWithObstacle(const Entity *obstacle, Entity *player, Uint64 deltaMS) {
+  Memory *memory = obstacle->memory;
+  move(player, memory->direction, deltaMS * MOVEMENT_SPEED(memory->speed));
 }
