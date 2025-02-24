@@ -234,7 +234,18 @@ void freeLevel(Level *level) {
   SDL_free(level);
 }
 
+static void updateObstacles(Level *level, Uint64 deltaMS, Obstacles *obstacles) {
+  for (unsigned int i = 0 ; i < obstacles->size ; i++) {
+    if (obstacles->obstacles[i] != nullptr) {
+      updateEntity(obstacles->obstacles[i], deltaMS, level);
+    }
+  }
+}
+
 void updateLevel(Level *level, Uint64 deltaMS) {
+  updateObstacles(level, deltaMS, &level->cars);
+  updateObstacles(level, deltaMS, &level->turtles);
+  updateObstacles(level, deltaMS, &level->logs);
   updateEntity(level->player, deltaMS, level);
 }
 
@@ -350,10 +361,10 @@ void moveEventLevel(Level *level, Direction direction) {
   Player_move(level->player, direction, level);
 }
 
-unsigned int getLevelWidth(Level *) {
+unsigned int getLevelWidth(const Level *) {
   return COLUMNS;
 }
 
-unsigned int getLevelHeight(Level *level) {
+unsigned int getLevelHeight(const Level *level) {
   return level->carLanes + level->riverLanes + 3;
 }

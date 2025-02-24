@@ -34,5 +34,5 @@ void updateLevel(Level *level, Uint64 deltaMS);
 void renderLevel(const Level *level, SDL_Renderer *renderer);
 void moveEventLevel(Level *level, Direction direction);
 
-unsigned int getLevelWidth(Level *level);
-unsigned int getLevelHeight(Level *level);
+unsigned int getLevelWidth(const Level *level);
+unsigned int getLevelHeight(const Level *level);

@@ -16,8 +16,14 @@
 */
 
 #include "Entities.h"
+#include "Level.h"
+#include "SDL3/SDL_log.h"
 #include "SDL3/SDL_pixels.h"
 #include "SDL3/SDL_render.h"
+
+#define MARGIN 2
+#define TIME_CELL 600
+#define MOVEMENT_SPEED(speed) (speed * 1. / TIME_CELL)
 
 typedef struct {
   SDL_Texture *texture;
@@ -36,7 +42,36 @@ static SDL_Texture *render(const Entity *entity, const Level *) {
   return memory->texture;
 }
 
-inline static Entity *createGeneric(Position start,
+static void warp(Entity *entity, const Level *level) {
+  Memory *memory = entity->memory;
+  unsigned int width = getLevelWidth(level);
+  if (memory->direction == LEFT && entity->position.x + entity->size.x <= 0) {
+    entity->position.x = width + MARGIN;
+  } else if (memory->direction == RIGHT && entity->position.x >= width) {
+    entity->position.x = -MARGIN - entity->size.x;
+  }
+}
+
+static void update(Entity *entity, Uint64 deltaMS, Level *level) {
+  Memory *memory = entity->memory;
+  switch (memory->direction) {
+  case LEFT:
+    entity->position.x -= deltaMS * MOVEMENT_SPEED(memory->speed);
+    break;
+  case RIGHT:
+    entity->position.x += deltaMS * MOVEMENT_SPEED(memory->speed);
+    break;
+  case UP:
+  case DOWN:
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                 "Invalid direction for an obstacle");
+    break;
+  }
+  warp(entity, level);
+}
+
+inline static Entity *createGeneric(Level *level,
+                                    Position start,
                                     Direction direction,
                                     unsigned int size,
                                     double speed,
@@ -48,6 +83,7 @@ inline static Entity *createGeneric(Position start,
   entity->size.y = 1;
   entity->cleanup = cleanup;
   entity->render = render;
+  entity->update = update;
 
   Memory *memory = entity->memory;
   memory->direction = direction;
@@ -58,6 +94,7 @@ inline static Entity *createGeneric(Position start,
                                       size * CELL_WIDTH,
                                       CELL_HEIGHT);
 
+  warp(entity, level);
   return entity;
 }
 
@@ -77,42 +114,41 @@ inline static void fillTexture(SDL_Texture *texture, SDL_Color *color) {
   }
 }
 
-Entity *createCarEntity(Level *,
+Entity *createCarEntity(Level *level,
                         Position start,
                         Direction direction,
                         unsigned int size,
                         double speed,
                         SDL_Renderer *renderer) {
-  Entity *car = createGeneric(start, direction, size, speed, renderer);
+  Entity *car = createGeneric(level, start, direction, size, speed, renderer);
   Memory *memory = car->memory;
   SDL_Color color = {.r = 160, .g = 25, .b = 25, .a = SDL_ALPHA_OPAQUE};
   fillTexture(memory->texture, &color);
 
-  // entity->update = update;
-
   return car;
 }
 
-Entity *createTurtleEntity(Level *,
+Entity *createTurtleEntity(Level *level,
                            Position start,
                            Direction direction,
                            unsigned int size,
                            double speed,
                            SDL_Renderer *renderer) {
-  Entity *turtle = createGeneric(start, direction, size, speed, renderer);
+  Entity *turtle =
+      createGeneric(level, start, direction, size, speed, renderer);
   Memory *memory = turtle->memory;
   SDL_Color color = {.r = 25, .g = 150, .b = 50, .a = SDL_ALPHA_OPAQUE};
   fillTexture(memory->texture, &color);
   return turtle;
 }
 
-Entity *createLogEntity(Level *,
+Entity *createLogEntity(Level *level,
                         Position start,
                         Direction direction,
                         unsigned int size,
                         double speed,
                         SDL_Renderer *renderer) {
-  Entity *log = createGeneric(start, direction, size, speed, renderer);
+  Entity *log = createGeneric(level, start, direction, size, speed, renderer);
   Memory *memory = log->memory;
   SDL_Color color = {.r = 153, .g = 88, .b = 42, .a = SDL_ALPHA_OPAQUE};
   fillTexture(memory->texture, &color);
