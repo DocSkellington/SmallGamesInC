@@ -20,7 +20,7 @@
 #include <assert.h>
 #include <math.h>
 
-#define ANIMATION_LENGTH 250
+#define ANIMATION_LENGTH 200
 #define MOVEMENT_SPEED_X (1. / ANIMATION_LENGTH)
 #define MOVEMENT_SPEED_Y (1. / ANIMATION_LENGTH)
 
@@ -54,7 +54,6 @@ static void update(Entity *entity, Uint64 deltaMS, Level *) {
   Memory *memory = entity->memory;
 
   if (memory->animation.duration >= ANIMATION_LENGTH) {
-    entity->position.x = round(entity->position.x);
     entity->position.y = round(entity->position.y);
     memory->animation.type = IDLE;
     memory->animation.duration = 0;
