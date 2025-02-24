@@ -24,16 +24,15 @@ typedef struct Entity Entity;
 
 struct Entity {
   void *memory;
-  Level *level;
   Position position;
   void (*cleanup)(Entity *entity);
-  SDL_Texture* (*render)(const Entity *entity);
-  void (*update)(Entity *entity, Uint64 deltaMS);
+  SDL_Texture* (*render)(const Entity *entity, const Level *level);
+  void (*update)(Entity *entity, Uint64 deltaMS, Level *level);
 };
 
 void freeEntity(Entity *entity);
-SDL_Texture* renderEntity(const Entity *entity);
-void updateEntity(Entity *entity, Uint64 deltaMS);
+SDL_Texture* renderEntity(const Entity *entity, const Level *level);
+void updateEntity(Entity *entity, Uint64 deltaMS, Level *level);
 
 Entity *createPlayerEntity(Level *level, Position start, SDL_Renderer *renderer);
-void Player_move(Entity *entity, Direction direction);
+void Player_move(Entity *entity, Direction direction, Level *level);

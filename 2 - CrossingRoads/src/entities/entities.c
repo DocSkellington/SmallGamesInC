@@ -24,16 +24,16 @@ void freeEntity(Entity *entity) {
   SDL_free(entity);
 }
 
-SDL_Texture* renderEntity(const Entity *entity) {
+SDL_Texture* renderEntity(const Entity *entity, const Level *level) {
   if (entity != nullptr && entity->render != nullptr) {
-    return entity->render(entity);
+    return entity->render(entity, level);
   }
   return nullptr;
 }
 
-void updateEntity(Entity *entity, Uint64 deltaMS) {
+void updateEntity(Entity *entity, Uint64 deltaMS, Level *level) {
   if (entity != nullptr && entity->update != nullptr) {
-    entity->update(entity, deltaMS);
+    entity->update(entity, deltaMS, level);
   }
 }
 

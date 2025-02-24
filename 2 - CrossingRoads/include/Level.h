@@ -36,5 +36,3 @@ void moveEventLevel(Level *level, Direction direction);
 
 unsigned int getLevelWidth(Level *level);
 unsigned int getLevelHeight(Level *level);
-void getLevelBoundary(Level *level, SDL_Rect *boundary);
-bool isOutOfBounds(Level *level, Position position);

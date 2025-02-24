@@ -50,7 +50,7 @@ static void cleanup(Entity *entity) {
   SDL_free(memory);
 }
 
-static void update(Entity *entity, Uint64 deltaMS) {
+static void update(Entity *entity, Uint64 deltaMS, Level *) {
   Memory *memory = entity->memory;
 
   if (memory->animation.duration >= ANIMATION_LENGTH) {
@@ -80,7 +80,7 @@ static void update(Entity *entity, Uint64 deltaMS) {
   }
 }
 
-static SDL_Texture *render(const Entity *entity) {
+static SDL_Texture *render(const Entity *entity, const Level *) {
   const Memory *memory = entity->memory;
   SDL_Color color = memory->palette->colors[memory->animation.type];
   SDL_Surface *surface = nullptr;
@@ -100,10 +100,9 @@ static SDL_Texture *render(const Entity *entity) {
   return memory->texture;
 }
 
-Entity *createPlayerEntity(Level *level, Position start, SDL_Renderer *renderer) {
+Entity *createPlayerEntity(Level *, Position start, SDL_Renderer *renderer) {
   Entity *entity = SDL_malloc(sizeof(Entity));
   entity->memory = SDL_malloc(sizeof(Memory));
-  entity->level = level;
   entity->position = start;
   entity->cleanup = cleanup;
   entity->render = render;
@@ -140,7 +139,7 @@ Entity *createPlayerEntity(Level *level, Position start, SDL_Renderer *renderer)
   return entity;
 }
 
-void Player_move(Entity *entity, Direction direction) {
+void Player_move(Entity *entity, Direction direction, Level *level) {
   assert(entity != nullptr);
   Memory *memory = entity->memory;
 
@@ -148,8 +147,8 @@ void Player_move(Entity *entity, Direction direction) {
     return;
   }
 
-  unsigned int width = getLevelWidth(entity->level);
-  unsigned int height = getLevelHeight(entity->level);
+  unsigned int width = getLevelWidth(level);
+  unsigned int height = getLevelHeight(level);
 
   switch (direction) {
   case UP:
