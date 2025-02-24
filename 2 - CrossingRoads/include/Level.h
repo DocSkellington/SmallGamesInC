@@ -22,20 +22,26 @@
 #define CELL_WIDTH 32
 #define CELL_HEIGHT 32
 
+typedef enum {
+  CONTINUE = 0,
+  LOST,
+  WON
+} LevelStatus;
+
 typedef struct {
   double x, y;
 } Position;
 
 typedef struct Level Level;
 
-Level *createLevel(unsigned int speed,
+Level *createLevel(double speed,
                    unsigned int carLanes,
                    unsigned int riverLanes,
                    bool safeZones,
                    SDL_Rect *windowSize,
                    SDL_Renderer *renderer);
 void freeLevel(Level *level);
-bool updateLevel(Level *level, Uint64 deltaMS);
+LevelStatus updateLevel(Level *level, Uint64 deltaMS);
 void renderLevel(const Level *level, SDL_Renderer *renderer);
 void moveEventLevel(Level *level, Direction direction);
 

@@ -4,6 +4,7 @@ set(SOURCE_LIST
     "src/states/optionsState.c"
     "src/states/gameState.c"
     "src/states/gameOverState.c"
+    "src/states/victoryState.c"
     "src/Level.c"
     "src/entities/entities.c"
     "src/entities/player.c"

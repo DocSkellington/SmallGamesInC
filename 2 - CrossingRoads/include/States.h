@@ -21,3 +21,4 @@ State *createStartState();
 State *createOptionsState();
 State *createGameState();
 State *createGameOverState();
+State *createVictoryState();

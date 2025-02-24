@@ -25,16 +25,39 @@
 
 typedef struct {
   Level *level;
+  unsigned int difficulty;
   bool lost;
+  bool won;
 } Memory;
+
+static Level *setupLevel(unsigned int difficulty, StateManager *manager) {
+  SDL_Rect windowSize = {.x = 0, .y = 0, .w = 0, .h = 0};
+  SDL_GetWindowSize(manager->mainWindow, &(windowSize.w), &(windowSize.h));
+  double speed = difficulty / 3.;
+  if (speed > 2) {
+    speed = 2;
+  }
+  unsigned int carLanes, riverLanes;
+  bool safeZones = true;
+  if (difficulty == 1) {
+    carLanes = 3;
+    riverLanes = 5;
+  } else if (difficulty == 2) {
+    carLanes = 5;
+    riverLanes = 3;
+  } else {
+    carLanes = 5;
+    riverLanes = 5;
+  }
+  return createLevel(speed, carLanes, riverLanes, safeZones, &windowSize, SDL_GetRenderer(manager->mainWindow));
+}
 
 static void init(void **m, StateManager *manager) {
   Memory *memory = SDL_malloc(sizeof(Memory));
-  SDL_Rect windowSize = {.x = 0, .y = 0, .w = 0, .h = 0};
-  SDL_GetWindowSize(manager->mainWindow, &(windowSize.w), &(windowSize.h));
-  memory->level = createLevel(
-      1, 3, 5, true, &windowSize, SDL_GetRenderer(manager->mainWindow));
+  memory->level = setupLevel(1, manager);
+  memory->difficulty = 1;
   memory->lost = false;
+  memory->won = false;
   *m = memory;
 }
 
@@ -48,14 +71,28 @@ static bool update(void *m, Uint64 deltaMS, StateManager *manager) {
   Memory *memory = m;
   if (memory->lost) {
     freeLevel(memory->level);
-    SDL_Rect windowSize = {.x = 0, .y = 0, .w = 0, .h = 0};
-    SDL_GetWindowSize(manager->mainWindow, &(windowSize.w), &(windowSize.h));
-    memory->level = createLevel(
-        1, 3, 5, true, &windowSize, SDL_GetRenderer(manager->mainWindow));
+    memory->difficulty = 1;
+    memory->level = setupLevel(1, manager);
     memory->lost = false;
-  } else if (updateLevel(memory->level, deltaMS)) {
-    memory->lost = true;
-    StateManager_Push(manager, createGameOverState());
+  } else if (memory->won) {
+    freeLevel(memory->level);
+    memory->difficulty++;
+    memory->level = setupLevel(memory->difficulty, manager);
+    memory->won = false;
+  } else {
+    LevelStatus status = updateLevel(memory->level, deltaMS);
+    switch (status) {
+    case CONTINUE:
+      break;
+    case LOST:
+      memory->lost = true;
+      StateManager_Push(manager, createGameOverState());
+      break;
+    case WON:
+      memory->won = true;
+      StateManager_Push(manager, createVictoryState());
+      break;
+    }
   }
   return false;
 }

@@ -49,7 +49,7 @@ struct Level {
   Obstacles cars;
   Obstacles logs;
   Obstacles turtles;
-  unsigned int speed;
+  double speed;
   unsigned int carLanes;
   unsigned int riverLanes;
   bool safeZones;
@@ -156,7 +156,7 @@ static void createObstacles(Level *level, SDL_Renderer *renderer) {
   }
 }
 
-Level *createLevel(unsigned int speed,
+Level *createLevel(double speed,
                    unsigned int carLanes,
                    unsigned int riverLanes,
                    bool safeZones,
@@ -269,8 +269,13 @@ static bool isHitByCar(const Level *level) {
 
 static bool isInWaterOrMoveWithObstacle(Level *level, Uint64 deltaMS) {
   Entity *player = level->player;
-  if (isPlayerJumping(player) || 1 > player->position.y || floor(player->position.y) >= level->riverLanes + 1) {
+  if (isPlayerJumping(player) || 1 > player->position.y ||
+      floor(player->position.y) >= level->riverLanes + 1) {
     return false;
+  }
+
+  if (player->position.x + player->size.x < 0 || player->position.x > COLUMNS) {
+    return true;
   }
 
   for (unsigned int i = 0; i < level->logs.size; i++) {
@@ -299,11 +304,12 @@ static bool isInWaterOrMoveWithObstacle(Level *level, Uint64 deltaMS) {
                               .w = player->size.x - ENTITY_MARGIN_X,
                               .h = player->size.y - ENTITY_MARGIN_Y};
       SDL_FRect turtleRect = {.x = turtle->position.x + ENTITY_MARGIN_X,
-                           .y = turtle->position.y + ENTITY_MARGIN_Y,
-                           .w = turtle->size.x - ENTITY_MARGIN_X,
-                           .h = turtle->size.y - ENTITY_MARGIN_Y};
+                              .y = turtle->position.y + ENTITY_MARGIN_Y,
+                              .w = turtle->size.x - ENTITY_MARGIN_X,
+                              .h = turtle->size.y - ENTITY_MARGIN_Y};
       SDL_FRect intersection;
-      if (SDL_GetRectIntersectionFloat(&playerRect, &turtleRect, &intersection)) {
+      if (SDL_GetRectIntersectionFloat(
+              &playerRect, &turtleRect, &intersection)) {
         movePlayerWithObstacle(turtle, player, deltaMS);
         return false;
       }
@@ -312,17 +318,29 @@ static bool isInWaterOrMoveWithObstacle(Level *level, Uint64 deltaMS) {
   return true;
 }
 
-bool updateLevel(Level *level, Uint64 deltaMS) {
+static bool isInTarget(Level *level) {
+  Entity *player = level->player;
+  if (isPlayerJumping(player)) {
+    return false;
+  } else {
+    return player->position.y < 1;
+  }
+}
+
+LevelStatus updateLevel(Level *level, Uint64 deltaMS) {
   updateObstacles(level, deltaMS, &level->cars);
   updateObstacles(level, deltaMS, &level->turtles);
   updateObstacles(level, deltaMS, &level->logs);
   updateEntity(level->player, deltaMS, level);
 
   if (isHitByCar(level) || isInWaterOrMoveWithObstacle(level, deltaMS)) {
-    return true;
+    return LOST;
+  }
+  if (isInTarget(level)) {
+    return WON;
   }
 
-  return false;
+  return CONTINUE;
 }
 
 inline static void renderOutside(const Level *level, SDL_Renderer *renderer) {

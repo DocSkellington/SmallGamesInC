@@ -39,11 +39,11 @@ static void init(void **memory, StateManager *manager) {
   }
   SDL_Color white = {255, 255, 255, SDL_ALPHA_OPAQUE};
 
-  SDL_Surface *surface = TTF_RenderText_Blended(m->font, "Game Over", 0, white);
+  SDL_Surface *surface = TTF_RenderText_Blended(m->font, "Level finished!", 0, white);
   m->victory = SDL_CreateTextureFromSurface(renderer, surface);
   SDL_DestroySurface(surface);
 
-  surface = TTF_RenderText_Blended(m->font, "Press SPACE to restart", 0, white);
+  surface = TTF_RenderText_Blended(m->font, "Press SPACE to play next level", 0, white);
   m->instruction = SDL_CreateTextureFromSurface(renderer, surface);
   SDL_DestroySurface(surface);
 
@@ -91,7 +91,7 @@ static bool processEvent(void *, SDL_Event *event, StateManager *manager) {
   return false;
 }
 
-State *createGameOverState() {
+State *createVictoryState() {
   State *state = State_Create();
   State_SetInit(state, init);
   State_SetDestroy(state, destroy);
